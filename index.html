@@ -3,213 +3,131 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Emotion Jumper</title>
+<title>Gravity Swap Chaos</title>
 <style>
 body{
   margin:0;
-  font-family:Arial,sans-serif;
-  background: linear-gradient(135deg,#ffd700,#ff69b4);
   overflow:hidden;
-}
-.container{
-  max-width:500px;
-  margin:auto;
-  padding:10px;
-  text-align:center;
-}
-h1{
-  color:#fff;
-  text-shadow:2px 2px 5px #000;
+  font-family:sans-serif;
+  background:#111;
 }
 #gameArea{
   position:relative;
-  width:100%;
-  height:500px;
-  background:linear-gradient(135deg,#87ceeb,#f0f8ff);
+  width:100vw;
+  height:100vh;
+  background:#111;
   overflow:hidden;
-  border-radius:15px;
-  box-shadow:0 0 20px rgba(0,0,0,0.5);
 }
-.character{
+.player{
   width:40px;
   height:40px;
+  background:lime;
   position:absolute;
-  bottom:50px;
+  top:50%;
   left:50%;
   margin-left:-20px;
-  border-radius:50%;
-  background:yellow;
-  text-align:center;
-  line-height:40px;
-  font-size:24px;
-  user-select:none;
-}
-.mood-bar{
-  width:100%;
-  height:20px;
-  background:#555;
-  border-radius:10px;
-  margin:10px 0;
-  overflow:hidden;
-}
-.mood-fill{
-  height:100%;
-  width:50%;
-  background:green;
-  transition:width 0.3s, background 0.3s;
-}
-.collectible, .obstacle{
-  width:30px;
-  height:30px;
-  position:absolute;
-  border-radius:50%;
-}
-.collectible{
-  background:gold;
+  margin-top:-20px;
+  transition:0.1s;
 }
 .obstacle{
+  width:50px;
+  height:50px;
   background:red;
+  position:absolute;
 }
-button{
-  margin:10px auto;
-  padding:12px;
-  font-size:16px;
-  font-weight:bold;
-  border:none;
-  border-radius:12px;
-  background:linear-gradient(90deg,#ffb347,#ffcc33);
+#scoreDisplay{
+  position:absolute;
+  top:10px;
+  left:10px;
   color:#fff;
+  font-size:20px;
+  font-weight:bold;
+  z-index:1000;
 }
-button:hover{cursor:pointer; transform:scale(1.05);}
-.hidden{display:none;}
 </style>
 </head>
 <body>
 
-<div class="container">
-<h1>💖 Emotion Jumper 💖</h1>
-<div id="startScreen">
-  <button onclick="startGame()">Start Game</button>
-</div>
-<div id="gameScreen" class="hidden">
-  <div class="mood-bar"><div class="mood-fill" id="moodFill"></div></div>
-  <div id="scoreDisplay">Score: 0</div>
-  <div id="gameArea"></div>
-</div>
-<div id="endScreen" class="hidden">
-  <div id="finalScore"></div>
-  <button onclick="restartGame()">Play Again</button>
-</div>
+<div id="gameArea">
+<div id="scoreDisplay">Score: 0</div>
+<div class="player" id="player"></div>
 </div>
 
 <script>
-// VARIABLES
-let score=0;
-let mood=50; // 0-100
-let gameInterval;
-let spawnInterval;
 const gameArea=document.getElementById('gameArea');
+const player=document.getElementById('player');
+let score=0;
+let gravity={x:0, y:1}; // initial gravity
+let vx=0, vy=0;
+let obstacles=[];
+let lastGravityFlip=0;
+let gameOver=false;
 
-// CHARACTER
-const char=document.createElement('div');
-char.className='character';
-char.innerText='😊';
-
-// START GAME
-function startGame(){
-  document.getElementById('startScreen').classList.add('hidden');
-  document.getElementById('gameScreen').classList.remove('hidden');
-  score=0; mood=50;
-  updateMood();
-  document.getElementById('scoreDisplay').innerText='Score: '+score;
-  char.style.bottom='50px';
-  gameArea.innerHTML='';
-  gameArea.appendChild(char);
-  // Gravity & jump
-  let velocity=0;
-  document.addEventListener('click',()=>{
-    velocity=-8; // jump
-  });
-  gameInterval=setInterval(()=>{
-    velocity+=0.5; // gravity
-    let bottom=parseFloat(char.style.bottom);
-    bottom+=velocity;
-    if(bottom<0) bottom=0;
-    if(bottom>460) bottom=460;
-    char.style.bottom=bottom+'px';
-    updateMood();
-    moveElements();
-    checkCollision();
-  },20);
-  // Spawn collectibles and obstacles
-  spawnInterval=setInterval(spawnElements,1000);
-}
-
-// MOOD BAR
-function updateMood(){
-  const fill=document.getElementById('moodFill');
-  fill.style.width=mood+'%';
-  if(mood>70) fill.style.background='green';
-  else if(mood>30) fill.style.background='yellow';
-  else fill.style.background='red';
-}
-
-// SPAWN ELEMENTS
-function spawnElements(){
-  const el=document.createElement(Math.random()<0.7?'div':'div');
-  if(Math.random()<0.7){
-    el.className='collectible';
-    el.dataset.type='coin';
-  }else{
-    el.className='obstacle';
-    el.dataset.type='trap';
+// Randomly flip gravity every 1.5 seconds
+function randomGravity(){
+  const dir=Math.floor(Math.random()*4);
+  switch(dir){
+    case 0: gravity={x:0,y:1}; break; // down
+    case 1: gravity={x:0,y:-1}; break; // up
+    case 2: gravity={x:1,y:0}; break; // right
+    case 3: gravity={x:-1,y:0}; break; // left
   }
-  el.style.bottom=Math.random()*400+'px';
-  el.style.left='500px';
-  gameArea.appendChild(el);
 }
 
-// MOVE ELEMENTS
-function moveElements(){
-  const elements=document.querySelectorAll('#gameArea .collectible, #gameArea .obstacle');
-  elements.forEach(el=>{
-    let left=parseFloat(el.style.left);
-    left-=4;
-    if(left<-30) gameArea.removeChild(el);
-    else el.style.left=left+'px';
-  });
+// Spawn random obstacles
+function spawnObstacle(){
+  const obs=document.createElement('div');
+  obs.className='obstacle';
+  obs.style.top=Math.random()*(window.innerHeight-50)+'px';
+  obs.style.left=Math.random()*(window.innerWidth-50)+'px';
+  gameArea.appendChild(obs);
+  obstacles.push(obs);
 }
 
-// COLLISION DETECTION
-function checkCollision(){
-  const charRect=char.getBoundingClientRect();
-  const elements=document.querySelectorAll('#gameArea .collectible, #gameArea .obstacle');
-  elements.forEach(el=>{
-    const elRect=el.getBoundingClientRect();
-    if(!(charRect.right<elRect.left || charRect.left>elRect.right || charRect.bottom<elRect.top || charRect.top>elRect.bottom)){
-      if(el.dataset.type==='coin'){score+=1; mood+=5;}
-      if(el.dataset.type==='trap'){score-=1; mood-=10;}
-      if(mood>100) mood=100;
-      if(mood<0) endGame();
-      document.getElementById('scoreDisplay').innerText='Score: '+score;
-      el.remove();
+// Update game state
+function update(){
+  if(gameOver) return;
+  // gravity flip
+  if(Date.now()-lastGravityFlip>1500){ randomGravity(); lastGravityFlip=Date.now();}
+  // apply velocity
+  vx+=gravity.x*0.5;
+  vy+=gravity.y*0.5;
+  let rect=player.getBoundingClientRect();
+  let x=rect.left+vx;
+  let y=rect.top+vy;
+  // boundary check
+  if(x<0||x>window.innerWidth-40||y<0||y>window.innerHeight-40){
+    gameOver=true; endGame(); return;
+  }
+  player.style.left=x+'px';
+  player.style.top=y+'px';
+  // check collisions
+  obstacles.forEach(o=>{
+    let oRect=o.getBoundingClientRect();
+    if(!(rect.right<oRect.left||rect.left>oRect.right||rect.bottom<oRect.top||rect.top>oRect.bottom)){
+      gameOver=true; endGame();
     }
   });
+  score++;
+  document.getElementById('scoreDisplay').innerText='Score: '+score;
+  requestAnimationFrame(update);
 }
 
-// END GAME
+// Control with tap/click
+document.addEventListener('click',()=>{
+  vx+= (Math.random()-0.5)*10;
+  vy+= (Math.random()-0.5)*10;
+});
+
+// spawn obstacles continuously
+setInterval(spawnObstacle,1000);
+
+// start game
+update();
+
 function endGame(){
-  clearInterval(gameInterval);
-  clearInterval(spawnInterval);
-  document.getElementById('gameScreen').classList.add('hidden');
-  document.getElementById('endScreen').classList.remove('hidden');
-  document.getElementById('finalScore').innerText='Game Over! Final Score: '+score;
-}
-
-// RESTART
-function restartGame(){
-  document.getElementById('endScreen').classList.add('hidden');
-  document.getElementById('startScreen').classList.remove('hidden');
+  alert('💥 Game Over! Score: '+score);
+  location.reload();
 }
 </script>
 
