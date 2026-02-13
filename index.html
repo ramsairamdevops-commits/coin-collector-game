@@ -1,266 +1,187 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>World Without You</title>
-
+<title>Top-End Coin Collector</title>
 <style>
-body{
-margin:0;
-font-family:Arial, sans-serif;
-background:radial-gradient(circle at center,#1f1f3a,#0f0f18);
-color:white;
-text-align:center;
-animation:bgMove 6s infinite alternate;
+body {
+  margin: 0;
+  font-family:'Arial',sans-serif;
+  background: linear-gradient(135deg,#1e3c72,#2a5298);
+  color: #fff;
+  text-align: center;
+  overflow: hidden;
 }
-
-@keyframes bgMove{
-from{background:#1f1f3a;}
-to{background:#121226;}
+.container {
+  max-width:500px;
+  margin:auto;
+  padding:20px;
 }
-
-.container{
-max-width:500px;
-margin:auto;
-padding:20px;
-}
-
 h1{
-margin-top:20px;
+  margin-top:20px;
+  font-size:28px;
+  text-shadow:2px 2px 5px #000;
 }
-
 .card{
-background:#222238;
-padding:20px;
-margin:20px 0;
-border-radius:12px;
-min-height:100px;
-box-shadow:0 0 20px rgba(0,0,0,0.6);
+  background: rgba(255,255,255,0.1);
+  padding:20px;
+  margin:20px 0;
+  border-radius:15px;
+  box-shadow:0 8px 20px rgba(0,0,0,0.5);
+  transition:0.3s;
 }
-
 button{
-display:block;
-margin:12px auto;
-padding:12px;
-width:90%;
-border:none;
-border-radius:8px;
-background:#2e8bff;
-color:white;
-font-size:16px;
-cursor:pointer;
-transition:0.2s;
+  display:block;
+  margin:12px auto;
+  padding:14px;
+  width:90%;
+  border:none;
+  border-radius:12px;
+  font-size:16px;
+  font-weight:bold;
+  color:#fff;
+  cursor:pointer;
+  background: linear-gradient(90deg,#ffb347,#ffcc33);
+  transition:0.3s;
 }
-
 button:hover{
-background:#1f6fd6;
+  background: linear-gradient(90deg,#ffcc33,#ffb347);
+  transform: scale(1.05);
 }
-
-button:active{
-transform:scale(0.95);
-}
-
-.hidden{
-display:none;
-}
-
+button:active{transform: scale(0.95);}
+.hidden{display:none;}
 .stats{
-display:flex;
-justify-content:space-between;
-margin:10px 0;
-font-size:14px;
+  display:flex;
+  justify-content:space-between;
+  margin:10px 0;
+  font-size:16px;
+  font-weight:bold;
+}
+.timer-bar{
+  height:12px;
+  background:#ffcc33;
+  border-radius:6px;
+  margin:10px 0;
+  transition: width 0.3s;
+}
+.coin{
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  position:absolute;
+  animation:fall linear;
+}
+.gold{background:gold;}
+.trap{background:red;}
+@keyframes fall{
+  0%{transform:translateY(0);}
+  100%{transform:translateY(500px);}
 }
 </style>
 </head>
-
 <body>
 
 <div class="container">
-
-<h1>🌍 World Without You</h1>
+<h1>💎 Top-End Coin Collector</h1>
 
 <div id="startScreen">
-<div class="card">
-The world continues without you.<br>
-You are invisible.<br>
-You have 60 seconds to influence destiny.
-</div>
-<button onclick="startGame()">Start Game</button>
+  <div class="card">Collect coins, avoid traps, grab power-ups!<br>Try to beat your best score.</div>
+  <button onclick="startGame()">Start Game</button>
 </div>
 
 <div id="gameScreen" class="hidden">
-<div class="stats">
-<span>⏳ <b id="time">60</b>s</span>
-<span>✨ Karma: <b id="karma">0</b></span>
-<span>🏆 Best: <b id="best">0</b></span>
-</div>
-
-<div class="card" id="story"></div>
-<div id="choices"></div>
+  <div class="stats">
+    <span>⏳ <b id="time">60</b>s</span>
+    <span>💰 <b id="coins">0</b></span>
+    <span>🏆 <b id="best">0</b></span>
+  </div>
+  <div class="timer-bar" id="timerBar"></div>
+  <div class="card" id="story">Tap coins to collect them!</div>
+  <div id="gameArea" style="position:relative;height:400px;"></div>
 </div>
 
 <div id="endScreen" class="hidden">
-<div class="card" id="result"></div>
-<button onclick="restartGame()">Play Again</button>
+  <div class="card" id="result"></div>
+  <button onclick="restartGame()">Play Again</button>
 </div>
 
 </div>
 
 <script>
-
-let karma=0;
+let coins=0;
 let timeLeft=60;
 let timer;
-let stage=0;
-
-const events=[
-{
-text:"Your mother cries every night missing you.",
-choices:[
-{text:"Leave a mysterious gift 🎁",effect:2},
-{text:"Do nothing",effect:-1}
-]
-},
-{
-text:"A robbery is happening nearby.",
-choices:[
-{text:"Trigger silent alarm 🚨",effect:2},
-{text:"Ignore it",effect:-1}
-]
-},
-{
-text:"Your friend plans risky startup.",
-choices:[
-{text:"Send anonymous advice 📩",effect:1},
-{text:"Let him fail",effect:-2}
-]
-},
-{
-text:"City pollution rising dangerously.",
-choices:[
-{text:"Expose corrupt factory 🏭",effect:2},
-{text:"Stay silent",effect:-1}
-]
-},
-{
-text:"Your sister feels hopeless.",
-choices:[
-{text:"Leave motivational note 💌",effect:2},
-{text:"Ignore her pain",effect:-2}
-]
-}
-];
+let best=localStorage.getItem("bestScore")||0;
+const gameArea=document.getElementById("gameArea");
+let spawnInterval;
 
 // SOUND
-function clickSound(){
-const ctx=new(window.AudioContext||window.webkitAudioContext)();
-const osc=ctx.createOscillator();
-osc.type="square";
-osc.frequency.setValueAtTime(500,ctx.currentTime);
-osc.connect(ctx.destination);
-osc.start();
-osc.stop(ctx.currentTime+0.1);
+function playSound(f,d){
+  const ctx=new (window.AudioContext||window.webkitAudioContext)();
+  const osc=ctx.createOscillator();
+  osc.type='square';
+  osc.frequency.setValueAtTime(f,ctx.currentTime);
+  osc.connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime+d);
 }
 
-function endSound(){
-const ctx=new(window.AudioContext||window.webkitAudioContext)();
-const osc=ctx.createOscillator();
-osc.type="sine";
-osc.frequency.setValueAtTime(200,ctx.currentTime);
-osc.connect(ctx.destination);
-osc.start();
-osc.stop(ctx.currentTime+0.5);
+// TIMER BAR
+function updateTimerBar(){
+  document.getElementById("timerBar").style.width=(timeLeft/60*100)+'%';
 }
 
+// SPAWN ELEMENTS
+function spawnElement(){
+  const type=Math.random();
+  const elem=document.createElement("div");
+  elem.className='coin';
+  if(type<0.7){elem.classList.add('gold');} else {elem.classList.add('trap');}
+  elem.style.left=Math.random()*470+'px';
+  gameArea.appendChild(elem);
+  elem.addEventListener('click',()=>{
+    if(elem.classList.contains('gold')){coins+=1; playSound(800,0.1);}
+    else{coins-=1; playSound(200,0.2);}
+    document.getElementById('coins').innerText=coins;
+    gameArea.removeChild(elem);
+  });
+  setTimeout(()=>{if(gameArea.contains(elem)) gameArea.removeChild(elem);},5000);
+}
+
+// START GAME
 function startGame(){
-document.getElementById("startScreen").classList.add("hidden");
-document.getElementById("gameScreen").classList.remove("hidden");
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('gameScreen').classList.remove('hidden');
+  coins=0; timeLeft=60;
+  document.getElementById('coins').innerText=coins;
+  document.getElementById('time').innerText=timeLeft;
+  document.getElementById('best').innerText=best;
+  updateTimerBar();
 
-karma=0;
-stage=0;
-timeLeft=60;
+  spawnInterval=setInterval(spawnElement,800);
 
-document.getElementById("karma").innerText=karma;
-document.getElementById("time").innerText=timeLeft;
-
-let best=localStorage.getItem("bestScore")||0;
-document.getElementById("best").innerText=best;
-
-timer=setInterval(updateTimer,1000);
-showEvent();
+  timer=setInterval(()=>{
+    timeLeft--;
+    document.getElementById('time').innerText=timeLeft;
+    updateTimerBar();
+    if(timeLeft<=0){clearInterval(timer); clearInterval(spawnInterval); endGame();}
+  },1000);
 }
 
-function updateTimer(){
-timeLeft--;
-document.getElementById("time").innerText=timeLeft;
-if(timeLeft<=0){
-clearInterval(timer);
-endGame();
-}
-}
-
-function showEvent(){
-if(stage>=events.length) stage=0;
-
-let current=events[stage];
-document.getElementById("story").innerText=current.text;
-
-let choicesDiv=document.getElementById("choices");
-choicesDiv.innerHTML="";
-
-current.choices.forEach(choice=>{
-let btn=document.createElement("button");
-btn.innerText=choice.text;
-btn.onclick=function(){
-clickSound();
-karma+=choice.effect;
-document.getElementById("karma").innerText=karma;
-stage++;
-showEvent();
-};
-choicesDiv.appendChild(btn);
-});
-}
-
+// END GAME
 function endGame(){
-document.getElementById("gameScreen").classList.add("hidden");
-document.getElementById("endScreen").classList.remove("hidden");
-
-endSound();
-
-let resultText="";
-
-if(karma>=8){
-resultText="🌟 Invisible Legend! The world changed because of you.";
-}
-else if(karma>=3){
-resultText="🙂 You quietly improved some lives.";
-}
-else if(karma>=0){
-resultText="😐 The world barely noticed you.";
-}
-else{
-resultText="💔 The world became worse without you.";
+  document.getElementById('gameScreen').classList.add('hidden');
+  document.getElementById('endScreen').classList.remove('hidden');
+  if(coins>best){best=coins; localStorage.setItem('bestScore',best);}
+  document.getElementById('result').innerText=`🎉 Game Over!\n💰 Coins collected: ${coins}\n🏆 Best Score: ${best}`;
 }
 
-let best=localStorage.getItem("bestScore")||0;
-if(karma>best){
-localStorage.setItem("bestScore",karma);
-best=karma;
-}
-
-resultText+="\n\n✨ Your Karma: "+karma;
-resultText+="\n🏆 Best Karma: "+best;
-
-document.getElementById("result").innerText=resultText;
-}
-
+// RESTART
 function restartGame(){
-document.getElementById("endScreen").classList.add("hidden");
-document.getElementById("startScreen").classList.remove("hidden");
+  document.getElementById('endScreen').classList.add('hidden');
+  document.getElementById('startScreen').classList.remove('hidden');
 }
-
 </script>
 
 </body>
