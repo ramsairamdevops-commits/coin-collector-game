@@ -3,39 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gravity Swap Chaos</title>
+<title>Reality Twister</title>
 <style>
 body{
   margin:0;
   overflow:hidden;
-  font-family:sans-serif;
   background:#111;
+  font-family:sans-serif;
 }
 #gameArea{
   position:relative;
   width:100vw;
   height:100vh;
-  background:#111;
+  background: linear-gradient(135deg,#4400ff,#00ffff);
   overflow:hidden;
 }
 .player{
-  width:40px;
-  height:40px;
-  background:lime;
+  width:30px;
+  height:30px;
+  background:#ff0;
   position:absolute;
   top:50%;
   left:50%;
-  margin-left:-20px;
-  margin-top:-20px;
-  transition:0.1s;
+  margin-left:-15px;
+  margin-top:-15px;
+  border-radius:50%;
 }
-.obstacle{
-  width:50px;
-  height:50px;
-  background:red;
+.platform{
   position:absolute;
+  background:#f00;
 }
-#scoreDisplay{
+.scoreDisplay{
   position:absolute;
   top:10px;
   left:10px;
@@ -47,89 +45,96 @@ body{
 </style>
 </head>
 <body>
-
 <div id="gameArea">
-<div id="scoreDisplay">Score: 0</div>
 <div class="player" id="player"></div>
+<div class="scoreDisplay" id="scoreDisplay">Score: 0</div>
 </div>
 
 <script>
 const gameArea=document.getElementById('gameArea');
 const player=document.getElementById('player');
 let score=0;
-let gravity={x:0, y:1}; // initial gravity
 let vx=0, vy=0;
-let obstacles=[];
-let lastGravityFlip=0;
+let gravity={x:0,y:0.3};
+let platforms=[];
 let gameOver=false;
 
-// Randomly flip gravity every 1.5 seconds
-function randomGravity(){
-  const dir=Math.floor(Math.random()*4);
-  switch(dir){
-    case 0: gravity={x:0,y:1}; break; // down
-    case 1: gravity={x:0,y:-1}; break; // up
-    case 2: gravity={x:1,y:0}; break; // right
-    case 3: gravity={x:-1,y:0}; break; // left
-  }
+// SPAWN PLATFORMS
+function spawnPlatform(){
+  const plat=document.createElement('div');
+  plat.className='platform';
+  plat.style.width=(50+Math.random()*100)+'px';
+  plat.style.height='10px';
+  plat.style.left=Math.random()*(window.innerWidth-150)+'px';
+  plat.style.top=Math.random()*(window.innerHeight-50)+'px';
+  plat.dataset.vx=(Math.random()-0.5)*2;
+  plat.dataset.vy=(Math.random()-0.5)*2;
+  gameArea.appendChild(plat);
+  platforms.push(plat);
 }
 
-// Spawn random obstacles
-function spawnObstacle(){
-  const obs=document.createElement('div');
-  obs.className='obstacle';
-  obs.style.top=Math.random()*(window.innerHeight-50)+'px';
-  obs.style.left=Math.random()*(window.innerWidth-50)+'px';
-  gameArea.appendChild(obs);
-  obstacles.push(obs);
-}
-
-// Update game state
-function update(){
-  if(gameOver) return;
-  // gravity flip
-  if(Date.now()-lastGravityFlip>1500){ randomGravity(); lastGravityFlip=Date.now();}
-  // apply velocity
-  vx+=gravity.x*0.5;
-  vy+=gravity.y*0.5;
-  let rect=player.getBoundingClientRect();
-  let x=rect.left+vx;
-  let y=rect.top+vy;
-  // boundary check
-  if(x<0||x>window.innerWidth-40||y<0||y>window.innerHeight-40){
-    gameOver=true; endGame(); return;
-  }
-  player.style.left=x+'px';
-  player.style.top=y+'px';
-  // check collisions
-  obstacles.forEach(o=>{
-    let oRect=o.getBoundingClientRect();
-    if(!(rect.right<oRect.left||rect.left>oRect.right||rect.bottom<oRect.top||rect.top>oRect.bottom)){
-      gameOver=true; endGame();
-    }
+// MOVE PLATFORMS
+function movePlatforms(){
+  platforms.forEach(p=>{
+    let left=parseFloat(p.style.left)+parseFloat(p.dataset.vx);
+    let top=parseFloat(p.style.top)+parseFloat(p.dataset.vy);
+    if(left<0||left>window.innerWidth-parseFloat(p.style.width)) p.dataset.vx*=-1;
+    if(top<0||top>window.innerHeight-10) p.dataset.vy*=-1;
+    p.style.left=left+'px';
+    p.style.top=top+'px';
+    p.style.transform=`rotate(${Math.random()*360}deg)`;
   });
+}
+
+// RANDOM GRAVITY FLIP
+function randomGravity(){
+  const dirs=[[0.3,0],[-0.3,0],[0,0.3],[0,-0.3]];
+  gravity=dirs[Math.floor(Math.random()*dirs.length)];
+}
+
+// COLLISION DETECTION
+function checkCollision(){
+  const rect=player.getBoundingClientRect();
+  for(const p of platforms){
+    const plat=p.getBoundingClientRect();
+    if(!(rect.right<plat.left || rect.left>plat.right || rect.bottom<plat.top || rect.top>plat.bottom)){
+      // landing on platform
+      vy=0; player.style.top=(plat.top-30)+'px';
+    }
+  }
+  if(rect.top>window.innerHeight||rect.top<0||rect.left<0||rect.left>window.innerWidth) gameOver=true;
+}
+
+// GAME LOOP
+function update(){
+  if(gameOver){ alert('💥 Game Over! Score: '+score); location.reload(); return;}
+  // gravity random flip
+  if(Math.random()<0.01) randomGravity();
+  vy+=gravity.y;
+  vx+=gravity.x;
+  let left=parseFloat(player.style.left)+vx;
+  let top=parseFloat(player.style.top)+vy;
+  player.style.left=left+'px';
+  player.style.top=top+'px';
+  movePlatforms();
+  checkCollision();
   score++;
   document.getElementById('scoreDisplay').innerText='Score: '+score;
   requestAnimationFrame(update);
 }
 
-// Control with tap/click
+// PLAYER CONTROL
 document.addEventListener('click',()=>{
-  vx+= (Math.random()-0.5)*10;
-  vy+= (Math.random()-0.5)*10;
+  vy=-5; vx=(Math.random()-0.5)*5;
 });
 
-// spawn obstacles continuously
-setInterval(spawnObstacle,1000);
+// SPAWN INITIAL PLATFORMS
+for(let i=0;i<10;i++) spawnPlatform();
 
-// start game
+// START GAME
 update();
+setInterval(spawnPlatform,3000);
 
-function endGame(){
-  alert('💥 Game Over! Score: '+score);
-  location.reload();
-}
 </script>
-
 </body>
 </html>
