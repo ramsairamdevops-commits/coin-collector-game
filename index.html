@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Coin Collector</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: linear-gradient(to right, #141e30, #243b55);
+      font-family: Arial;
+      color: white;
+      text-align: center;
+    }
+
+    #score {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      font-weight: bold;
+      z-index: 10;
+    }
+
+    #player {
+      width: 60px;
+      height: 60px;
+      background: lime;
+      border-radius: 50%;
+      position: absolute;
+      left: 50%;
+      top: 70%;
+      transform: translate(-50%, -50%);
+    }
+
+    .coin {
+      width: 40px;
+      height: 40px;
+      background: gold;
+      border-radius: 50%;
+      position: absolute;
+    }
+  </style>
+</head>
+<body>
+
+<div id="score">Score: 0</div>
+<div id="player"></div>
+
+<script>
+let player = document.getElementById("player");
+let scoreText = document.getElementById("score");
+let score = 0;
+
+let playerX = window.innerWidth / 2;
+let playerY = window.innerHeight * 0.7;
+
+// Touch movement
+document.addEventListener("touchmove", function(e) {
+  let touch = e.touches[0];
+  playerX = touch.clientX;
+  playerY = touch.clientY;
+
+  player.style.left = playerX + "px";
+  player.style.top = playerY + "px";
+});
+
+// Also works with mouse (for laptop testing)
+document.addEventListener("mousemove", function(e) {
+  playerX = e.clientX;
+  playerY = e.clientY;
+
+  player.style.left = playerX + "px";
+  player.style.top = playerY + "px";
+});
+
+// Create coins
+function createCoin() {
+  let coin = document.createElement("div");
+  coin.classList.add("coin");
+
+  let x = Math.random() * (window.innerWidth - 40);
+  let y = Math.random() * (window.innerHeight - 40);
+
+  coin.style.left = x + "px";
+  coin.style.top = y + "px";
+
+  document.body.appendChild(coin);
+
+  // Collision check
+  let interval = setInterval(function() {
+    let coinRect = coin.getBoundingClientRect();
+    let playerRect = player.getBoundingClientRect();
+
+    if (
+      coinRect.left < playerRect.right &&
+      coinRect.right > playerRect.left &&
+      coinRect.top < playerRect.bottom &&
+      coinRect.bottom > playerRect.top
+    ) {
+      score++;
+      scoreText.innerText = "Score: " + score;
+      coin.remove();
+      clearInterval(interval);
+      createCoin();
+    }
+  }, 20);
+}
+
+createCoin();
+</script>
+
+</body>
+</html>
