@@ -3,178 +3,207 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Top-End Coin Collector</title>
+<title>Emotion Jumper</title>
 <style>
-body {
-  margin: 0;
-  font-family:'Arial',sans-serif;
-  background: linear-gradient(135deg,#1e3c72,#2a5298);
-  color: #fff;
-  text-align: center;
-  overflow: hidden;
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background: linear-gradient(135deg,#ffd700,#ff69b4);
+  overflow:hidden;
 }
-.container {
+.container{
   max-width:500px;
   margin:auto;
-  padding:20px;
+  padding:10px;
+  text-align:center;
 }
 h1{
-  margin-top:20px;
-  font-size:28px;
+  color:#fff;
   text-shadow:2px 2px 5px #000;
 }
-.card{
-  background: rgba(255,255,255,0.1);
-  padding:20px;
-  margin:20px 0;
+#gameArea{
+  position:relative;
+  width:100%;
+  height:500px;
+  background:linear-gradient(135deg,#87ceeb,#f0f8ff);
+  overflow:hidden;
   border-radius:15px;
-  box-shadow:0 8px 20px rgba(0,0,0,0.5);
-  transition:0.3s;
+  box-shadow:0 0 20px rgba(0,0,0,0.5);
 }
-button{
-  display:block;
-  margin:12px auto;
-  padding:14px;
-  width:90%;
-  border:none;
-  border-radius:12px;
-  font-size:16px;
-  font-weight:bold;
-  color:#fff;
-  cursor:pointer;
-  background: linear-gradient(90deg,#ffb347,#ffcc33);
-  transition:0.3s;
+.character{
+  width:40px;
+  height:40px;
+  position:absolute;
+  bottom:50px;
+  left:50%;
+  margin-left:-20px;
+  border-radius:50%;
+  background:yellow;
+  text-align:center;
+  line-height:40px;
+  font-size:24px;
+  user-select:none;
 }
-button:hover{
-  background: linear-gradient(90deg,#ffcc33,#ffb347);
-  transform: scale(1.05);
-}
-button:active{transform: scale(0.95);}
-.hidden{display:none;}
-.stats{
-  display:flex;
-  justify-content:space-between;
+.mood-bar{
+  width:100%;
+  height:20px;
+  background:#555;
+  border-radius:10px;
   margin:10px 0;
-  font-size:16px;
-  font-weight:bold;
+  overflow:hidden;
 }
-.timer-bar{
-  height:12px;
-  background:#ffcc33;
-  border-radius:6px;
-  margin:10px 0;
-  transition: width 0.3s;
+.mood-fill{
+  height:100%;
+  width:50%;
+  background:green;
+  transition:width 0.3s, background 0.3s;
 }
-.coin{
+.collectible, .obstacle{
   width:30px;
   height:30px;
-  border-radius:50%;
   position:absolute;
-  animation:fall linear;
+  border-radius:50%;
 }
-.gold{background:gold;}
-.trap{background:red;}
-@keyframes fall{
-  0%{transform:translateY(0);}
-  100%{transform:translateY(500px);}
+.collectible{
+  background:gold;
 }
+.obstacle{
+  background:red;
+}
+button{
+  margin:10px auto;
+  padding:12px;
+  font-size:16px;
+  font-weight:bold;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(90deg,#ffb347,#ffcc33);
+  color:#fff;
+}
+button:hover{cursor:pointer; transform:scale(1.05);}
+.hidden{display:none;}
 </style>
 </head>
 <body>
 
 <div class="container">
-<h1>💎 Top-End Coin Collector</h1>
-
+<h1>💖 Emotion Jumper 💖</h1>
 <div id="startScreen">
-  <div class="card">Collect coins, avoid traps, grab power-ups!<br>Try to beat your best score.</div>
   <button onclick="startGame()">Start Game</button>
 </div>
-
 <div id="gameScreen" class="hidden">
-  <div class="stats">
-    <span>⏳ <b id="time">60</b>s</span>
-    <span>💰 <b id="coins">0</b></span>
-    <span>🏆 <b id="best">0</b></span>
-  </div>
-  <div class="timer-bar" id="timerBar"></div>
-  <div class="card" id="story">Tap coins to collect them!</div>
-  <div id="gameArea" style="position:relative;height:400px;"></div>
+  <div class="mood-bar"><div class="mood-fill" id="moodFill"></div></div>
+  <div id="scoreDisplay">Score: 0</div>
+  <div id="gameArea"></div>
 </div>
-
 <div id="endScreen" class="hidden">
-  <div class="card" id="result"></div>
+  <div id="finalScore"></div>
   <button onclick="restartGame()">Play Again</button>
 </div>
-
 </div>
 
 <script>
-let coins=0;
-let timeLeft=60;
-let timer;
-let best=localStorage.getItem("bestScore")||0;
-const gameArea=document.getElementById("gameArea");
+// VARIABLES
+let score=0;
+let mood=50; // 0-100
+let gameInterval;
 let spawnInterval;
+const gameArea=document.getElementById('gameArea');
 
-// SOUND
-function playSound(f,d){
-  const ctx=new (window.AudioContext||window.webkitAudioContext)();
-  const osc=ctx.createOscillator();
-  osc.type='square';
-  osc.frequency.setValueAtTime(f,ctx.currentTime);
-  osc.connect(ctx.destination);
-  osc.start();
-  osc.stop(ctx.currentTime+d);
-}
-
-// TIMER BAR
-function updateTimerBar(){
-  document.getElementById("timerBar").style.width=(timeLeft/60*100)+'%';
-}
-
-// SPAWN ELEMENTS
-function spawnElement(){
-  const type=Math.random();
-  const elem=document.createElement("div");
-  elem.className='coin';
-  if(type<0.7){elem.classList.add('gold');} else {elem.classList.add('trap');}
-  elem.style.left=Math.random()*470+'px';
-  gameArea.appendChild(elem);
-  elem.addEventListener('click',()=>{
-    if(elem.classList.contains('gold')){coins+=1; playSound(800,0.1);}
-    else{coins-=1; playSound(200,0.2);}
-    document.getElementById('coins').innerText=coins;
-    gameArea.removeChild(elem);
-  });
-  setTimeout(()=>{if(gameArea.contains(elem)) gameArea.removeChild(elem);},5000);
-}
+// CHARACTER
+const char=document.createElement('div');
+char.className='character';
+char.innerText='😊';
 
 // START GAME
 function startGame(){
   document.getElementById('startScreen').classList.add('hidden');
   document.getElementById('gameScreen').classList.remove('hidden');
-  coins=0; timeLeft=60;
-  document.getElementById('coins').innerText=coins;
-  document.getElementById('time').innerText=timeLeft;
-  document.getElementById('best').innerText=best;
-  updateTimerBar();
+  score=0; mood=50;
+  updateMood();
+  document.getElementById('scoreDisplay').innerText='Score: '+score;
+  char.style.bottom='50px';
+  gameArea.innerHTML='';
+  gameArea.appendChild(char);
+  // Gravity & jump
+  let velocity=0;
+  document.addEventListener('click',()=>{
+    velocity=-8; // jump
+  });
+  gameInterval=setInterval(()=>{
+    velocity+=0.5; // gravity
+    let bottom=parseFloat(char.style.bottom);
+    bottom+=velocity;
+    if(bottom<0) bottom=0;
+    if(bottom>460) bottom=460;
+    char.style.bottom=bottom+'px';
+    updateMood();
+    moveElements();
+    checkCollision();
+  },20);
+  // Spawn collectibles and obstacles
+  spawnInterval=setInterval(spawnElements,1000);
+}
 
-  spawnInterval=setInterval(spawnElement,800);
+// MOOD BAR
+function updateMood(){
+  const fill=document.getElementById('moodFill');
+  fill.style.width=mood+'%';
+  if(mood>70) fill.style.background='green';
+  else if(mood>30) fill.style.background='yellow';
+  else fill.style.background='red';
+}
 
-  timer=setInterval(()=>{
-    timeLeft--;
-    document.getElementById('time').innerText=timeLeft;
-    updateTimerBar();
-    if(timeLeft<=0){clearInterval(timer); clearInterval(spawnInterval); endGame();}
-  },1000);
+// SPAWN ELEMENTS
+function spawnElements(){
+  const el=document.createElement(Math.random()<0.7?'div':'div');
+  if(Math.random()<0.7){
+    el.className='collectible';
+    el.dataset.type='coin';
+  }else{
+    el.className='obstacle';
+    el.dataset.type='trap';
+  }
+  el.style.bottom=Math.random()*400+'px';
+  el.style.left='500px';
+  gameArea.appendChild(el);
+}
+
+// MOVE ELEMENTS
+function moveElements(){
+  const elements=document.querySelectorAll('#gameArea .collectible, #gameArea .obstacle');
+  elements.forEach(el=>{
+    let left=parseFloat(el.style.left);
+    left-=4;
+    if(left<-30) gameArea.removeChild(el);
+    else el.style.left=left+'px';
+  });
+}
+
+// COLLISION DETECTION
+function checkCollision(){
+  const charRect=char.getBoundingClientRect();
+  const elements=document.querySelectorAll('#gameArea .collectible, #gameArea .obstacle');
+  elements.forEach(el=>{
+    const elRect=el.getBoundingClientRect();
+    if(!(charRect.right<elRect.left || charRect.left>elRect.right || charRect.bottom<elRect.top || charRect.top>elRect.bottom)){
+      if(el.dataset.type==='coin'){score+=1; mood+=5;}
+      if(el.dataset.type==='trap'){score-=1; mood-=10;}
+      if(mood>100) mood=100;
+      if(mood<0) endGame();
+      document.getElementById('scoreDisplay').innerText='Score: '+score;
+      el.remove();
+    }
+  });
 }
 
 // END GAME
 function endGame(){
+  clearInterval(gameInterval);
+  clearInterval(spawnInterval);
   document.getElementById('gameScreen').classList.add('hidden');
   document.getElementById('endScreen').classList.remove('hidden');
-  if(coins>best){best=coins; localStorage.setItem('bestScore',best);}
-  document.getElementById('result').innerText=`🎉 Game Over!\n💰 Coins collected: ${coins}\n🏆 Best Score: ${best}`;
+  document.getElementById('finalScore').innerText='Game Over! Final Score: '+score;
 }
 
 // RESTART
