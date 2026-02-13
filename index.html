@@ -3,90 +3,83 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EchoWeave: Emotion Contagion</title>
+<title>NeuroSync Prototype</title>
 <style>
-body {margin:0; font-family:sans-serif; background:#222; color:#fff;}
-#gameArea {position:relative; width:100vw; height:80vh; background:#333; overflow:hidden;}
-.villager {
-  width:30px; height:30px; border-radius:50%; position:absolute;
-  text-align:center; line-height:30px; font-weight:bold;
-  color:#000; cursor:pointer;
-}
-button {margin:5px; padding:10px; font-size:16px; border:none; border-radius:8px; cursor:pointer;}
+body{margin:0;font-family:sans-serif;background:#111;color:#fff;overflow:hidden;}
+#network{position:absolute;top:0;left:0;width:100vw;height:100vh;}
+#sidebar{position:absolute;top:0;right:0;width:200px;height:100vh;background:#222;padding:10px;}
+.node{position:absolute;width:30px;height:30px;border-radius:50%;text-align:center;line-height:30px;color:#000;font-weight:bold;}
+button{margin:5px;padding:5px;width:100%;}
 </style>
 </head>
 <body>
-<h1>EchoWeave: Emotion Contagion Village</h1>
-<div>
-<button onclick="build('house')">Build House</button>
-<button onclick="build('entertainment')">Build Entertainment</button>
-<button onclick="build('workplace')">Build Workplace</button>
+
+<canvas id="network"></canvas>
+<div id="sidebar">
+<h3>Personal Mood</h3>
+<label>Happiness: <input type="range" id="happy" min="0" max="100" value="50"></label><br>
+<label>Anger: <input type="range" id="anger" min="0" max="100" value="0"></label><br>
+<label>Focus: <input type="range" id="focus" min="0" max="100" value="50"></label><br>
+<input type="text" id="wordInput" placeholder="Type word...">
+<input type="color" id="colorInput" value="#00ff00">
+<button onclick="sendChoice()">Add Node</button>
 </div>
-<div id="gameArea"></div>
-<div id="score">Score: 0 | Happiness: 50%</div>
 
 <script>
-const gameArea = document.getElementById('gameArea');
-let villagers = [];
-let buildings = [];
-let score = 0;
+const canvas=document.getElementById('network');
+const ctx=canvas.getContext('2d');
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+let nodes=[];
 
-// VILLAGER EMOTIONS
-const moods = ['happy','neutral','sad','angry'];
-const moodColors = {happy:'yellow',neutral:'gray',sad:'blue',angry:'red'};
+// WebSocket connection
+const ws = new WebSocket('ws://localhost:8080');
 
-// SPAWN INITIAL VILLAGERS
-for(let i=0;i<10;i++){
-  spawnVillager();
+ws.onmessage = (msg)=>{
+    const data = JSON.parse(msg.data);
+    if(data.type==='updateGraph'){
+        nodes = data.graph;
+    }
 }
 
-function spawnVillager(){
-  const v=document.createElement('div');
-  v.className='villager';
-  v.style.left=Math.random()*(window.innerWidth-30)+'px';
-  v.style.top=Math.random()*(window.innerHeight*0.8-30)+'px';
-  v.dataset.mood = moods[Math.floor(Math.random()*moods.length)];
-  v.style.background = moodColors[v.dataset.mood];
-  gameArea.appendChild(v);
-  villagers.push(v);
+// Send choice
+function sendChoice(){
+    const word=document.getElementById('wordInput').value||'';
+    const color=document.getElementById('colorInput').value;
+    ws.send(JSON.stringify({type:'nodeChoice', word, color}));
 }
 
-// BUILDING ACTIONS
-function build(type){
-  buildings.push({type, time:Date.now()});
-  // Affect villagers based on type
-  villagers.forEach(v=>{
-    if(type==='house' && v.dataset.mood!=='happy') setMood(v,'neutral');
-    if(type==='entertainment') setMood(v,'happy');
-    if(type==='workplace' && v.dataset.mood==='happy') setMood(v,'neutral');
-  });
-  updateScore();
-}
+// Draw loop
+function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    nodes.forEach((n,i)=>{
+        const x = 100 + i*50 % (canvas.width-200);
+        const y = 50 + Math.floor(i/10)*50;
+        // draw node
+        ctx.fillStyle = n.color;
+        ctx.beginPath();
+        ctx.arc(x,y,15,0,Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle="#000";
+        ctx.fillText(n.word.slice(0,2),x-7,y+5);
 
-function setMood(v, mood){
-  v.dataset.mood = mood;
-  v.style.background = moodColors[mood];
-}
-
-// EMOTION CONTAGION: Every 2 sec
-setInterval(()=>{
-  villagers.forEach(v=>{
-    let neighbors = villagers.filter(n=>n!==v);
-    neighbors.forEach(n=>{
-      if(n.dataset.mood==='happy' && Math.random()<0.1) setMood(v,'happy');
-      if(n.dataset.mood==='angry' && Math.random()<0.05) setMood(v,'angry');
+        // draw edges (connect to previous node)
+        if(i>0){
+            const prev = nodes[i-1];
+            const px = 100 + (i-1)*50 % (canvas.width-200);
+            const py = 50 + Math.floor((i-1)/10)*50;
+            ctx.strokeStyle = n.color;
+            ctx.lineWidth=2;
+            ctx.beginPath();
+            ctx.moveTo(x,y);
+            ctx.lineTo(px,py);
+            ctx.stroke();
+        }
     });
-  });
-  updateScore();
-},2000);
-
-// UPDATE SCORE AND HAPPINESS
-function updateScore(){
-  let happyCount = villagers.filter(v=>v.dataset.mood==='happy').length;
-  let happiness = Math.round(happyCount/villagers.length*100);
-  score += happyCount;
-  document.getElementById('score').innerText = `Score: ${score} | Happiness: ${happiness}%`;
+    requestAnimationFrame(draw);
 }
+draw();
 </script>
+
 </body>
 </html>
