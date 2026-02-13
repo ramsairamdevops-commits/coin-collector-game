@@ -3,138 +3,90 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reality Twister</title>
+<title>EchoWeave: Emotion Contagion</title>
 <style>
-body{
-  margin:0;
-  overflow:hidden;
-  background:#111;
-  font-family:sans-serif;
+body {margin:0; font-family:sans-serif; background:#222; color:#fff;}
+#gameArea {position:relative; width:100vw; height:80vh; background:#333; overflow:hidden;}
+.villager {
+  width:30px; height:30px; border-radius:50%; position:absolute;
+  text-align:center; line-height:30px; font-weight:bold;
+  color:#000; cursor:pointer;
 }
-#gameArea{
-  position:relative;
-  width:100vw;
-  height:100vh;
-  background: linear-gradient(135deg,#4400ff,#00ffff);
-  overflow:hidden;
-}
-.player{
-  width:30px;
-  height:30px;
-  background:#ff0;
-  position:absolute;
-  top:50%;
-  left:50%;
-  margin-left:-15px;
-  margin-top:-15px;
-  border-radius:50%;
-}
-.platform{
-  position:absolute;
-  background:#f00;
-}
-.scoreDisplay{
-  position:absolute;
-  top:10px;
-  left:10px;
-  color:#fff;
-  font-size:20px;
-  font-weight:bold;
-  z-index:1000;
-}
+button {margin:5px; padding:10px; font-size:16px; border:none; border-radius:8px; cursor:pointer;}
 </style>
 </head>
 <body>
-<div id="gameArea">
-<div class="player" id="player"></div>
-<div class="scoreDisplay" id="scoreDisplay">Score: 0</div>
+<h1>EchoWeave: Emotion Contagion Village</h1>
+<div>
+<button onclick="build('house')">Build House</button>
+<button onclick="build('entertainment')">Build Entertainment</button>
+<button onclick="build('workplace')">Build Workplace</button>
 </div>
+<div id="gameArea"></div>
+<div id="score">Score: 0 | Happiness: 50%</div>
 
 <script>
-const gameArea=document.getElementById('gameArea');
-const player=document.getElementById('player');
-let score=0;
-let vx=0, vy=0;
-let gravity={x:0,y:0.3};
-let platforms=[];
-let gameOver=false;
+const gameArea = document.getElementById('gameArea');
+let villagers = [];
+let buildings = [];
+let score = 0;
 
-// SPAWN PLATFORMS
-function spawnPlatform(){
-  const plat=document.createElement('div');
-  plat.className='platform';
-  plat.style.width=(50+Math.random()*100)+'px';
-  plat.style.height='10px';
-  plat.style.left=Math.random()*(window.innerWidth-150)+'px';
-  plat.style.top=Math.random()*(window.innerHeight-50)+'px';
-  plat.dataset.vx=(Math.random()-0.5)*2;
-  plat.dataset.vy=(Math.random()-0.5)*2;
-  gameArea.appendChild(plat);
-  platforms.push(plat);
+// VILLAGER EMOTIONS
+const moods = ['happy','neutral','sad','angry'];
+const moodColors = {happy:'yellow',neutral:'gray',sad:'blue',angry:'red'};
+
+// SPAWN INITIAL VILLAGERS
+for(let i=0;i<10;i++){
+  spawnVillager();
 }
 
-// MOVE PLATFORMS
-function movePlatforms(){
-  platforms.forEach(p=>{
-    let left=parseFloat(p.style.left)+parseFloat(p.dataset.vx);
-    let top=parseFloat(p.style.top)+parseFloat(p.dataset.vy);
-    if(left<0||left>window.innerWidth-parseFloat(p.style.width)) p.dataset.vx*=-1;
-    if(top<0||top>window.innerHeight-10) p.dataset.vy*=-1;
-    p.style.left=left+'px';
-    p.style.top=top+'px';
-    p.style.transform=`rotate(${Math.random()*360}deg)`;
+function spawnVillager(){
+  const v=document.createElement('div');
+  v.className='villager';
+  v.style.left=Math.random()*(window.innerWidth-30)+'px';
+  v.style.top=Math.random()*(window.innerHeight*0.8-30)+'px';
+  v.dataset.mood = moods[Math.floor(Math.random()*moods.length)];
+  v.style.background = moodColors[v.dataset.mood];
+  gameArea.appendChild(v);
+  villagers.push(v);
+}
+
+// BUILDING ACTIONS
+function build(type){
+  buildings.push({type, time:Date.now()});
+  // Affect villagers based on type
+  villagers.forEach(v=>{
+    if(type==='house' && v.dataset.mood!=='happy') setMood(v,'neutral');
+    if(type==='entertainment') setMood(v,'happy');
+    if(type==='workplace' && v.dataset.mood==='happy') setMood(v,'neutral');
   });
+  updateScore();
 }
 
-// RANDOM GRAVITY FLIP
-function randomGravity(){
-  const dirs=[[0.3,0],[-0.3,0],[0,0.3],[0,-0.3]];
-  gravity=dirs[Math.floor(Math.random()*dirs.length)];
+function setMood(v, mood){
+  v.dataset.mood = mood;
+  v.style.background = moodColors[mood];
 }
 
-// COLLISION DETECTION
-function checkCollision(){
-  const rect=player.getBoundingClientRect();
-  for(const p of platforms){
-    const plat=p.getBoundingClientRect();
-    if(!(rect.right<plat.left || rect.left>plat.right || rect.bottom<plat.top || rect.top>plat.bottom)){
-      // landing on platform
-      vy=0; player.style.top=(plat.top-30)+'px';
-    }
-  }
-  if(rect.top>window.innerHeight||rect.top<0||rect.left<0||rect.left>window.innerWidth) gameOver=true;
+// EMOTION CONTAGION: Every 2 sec
+setInterval(()=>{
+  villagers.forEach(v=>{
+    let neighbors = villagers.filter(n=>n!==v);
+    neighbors.forEach(n=>{
+      if(n.dataset.mood==='happy' && Math.random()<0.1) setMood(v,'happy');
+      if(n.dataset.mood==='angry' && Math.random()<0.05) setMood(v,'angry');
+    });
+  });
+  updateScore();
+},2000);
+
+// UPDATE SCORE AND HAPPINESS
+function updateScore(){
+  let happyCount = villagers.filter(v=>v.dataset.mood==='happy').length;
+  let happiness = Math.round(happyCount/villagers.length*100);
+  score += happyCount;
+  document.getElementById('score').innerText = `Score: ${score} | Happiness: ${happiness}%`;
 }
-
-// GAME LOOP
-function update(){
-  if(gameOver){ alert('💥 Game Over! Score: '+score); location.reload(); return;}
-  // gravity random flip
-  if(Math.random()<0.01) randomGravity();
-  vy+=gravity.y;
-  vx+=gravity.x;
-  let left=parseFloat(player.style.left)+vx;
-  let top=parseFloat(player.style.top)+vy;
-  player.style.left=left+'px';
-  player.style.top=top+'px';
-  movePlatforms();
-  checkCollision();
-  score++;
-  document.getElementById('scoreDisplay').innerText='Score: '+score;
-  requestAnimationFrame(update);
-}
-
-// PLAYER CONTROL
-document.addEventListener('click',()=>{
-  vy=-5; vx=(Math.random()-0.5)*5;
-});
-
-// SPAWN INITIAL PLATFORMS
-for(let i=0;i<10;i++) spawnPlatform();
-
-// START GAME
-update();
-setInterval(spawnPlatform,3000);
-
 </script>
 </body>
 </html>
