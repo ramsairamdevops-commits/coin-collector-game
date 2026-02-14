@@ -1,263 +1,232 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>EchoSoul Anonymous</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hidden Voice</title>
 
 <style>
 body{
-  font-family:Arial;
-  margin:0;
-  background:#0f172a;
-  color:white;
+    margin:0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg,#1e1e2f,#121212);
+    color:white;
 }
+
+header{
+    padding:15px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+}
+
+.logo{
+    font-size:20px;
+    font-weight:bold;
+}
+
+.auth-buttons button{
+    margin-left:10px;
+    padding:8px 15px;
+    border:none;
+    border-radius:20px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.signup-btn{
+    background:linear-gradient(45deg,#00c6ff,#0072ff);
+    color:white;
+}
+
+.login-btn{
+    background:linear-gradient(45deg,#ff416c,#ff4b2b);
+    color:white;
+}
+
 .container{
-  max-width:600px;
-  margin:auto;
-  padding:20px;
+    padding:15px;
+    max-width:500px;
+    margin:auto;
 }
-.card{
-  background:#1e293b;
-  padding:20px;
-  border-radius:15px;
-  margin-bottom:20px;
+
+.post-card{
+    background: rgba(255,255,255,0.08);
+    padding:15px;
+    margin-bottom:15px;
+    border-radius:15px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.3);
+    transition:0.3s;
 }
-input,select,textarea,button{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
-  border-radius:8px;
-  border:none;
+
+.post-card:hover{
+    transform:scale(1.02);
 }
-button{
-  background:#6366f1;
-  color:white;
-  font-weight:bold;
+
+.floating-btn{
+    position:fixed;
+    bottom:25px;
+    right:25px;
+    background:linear-gradient(45deg,#ff416c,#ff4b2b);
+    width:60px;
+    height:60px;
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:30px;
+    cursor:pointer;
+    box-shadow:0 5px 15px rgba(0,0,0,0.5);
 }
-.hidden{display:none;}
-.feed-item{
-  background:#334155;
-  padding:10px;
-  border-radius:10px;
-  margin-top:10px;
+
+.modal{
+    display:none;
+    position:fixed;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.8);
+    justify-content:center;
+    align-items:center;
 }
-.badge{
-  padding:5px 10px;
-  border-radius:20px;
-  font-size:12px;
+
+.modal-content{
+    background:#1f1f2e;
+    padding:20px;
+    border-radius:15px;
+    width:90%;
+    max-width:400px;
 }
-.admin-badge{ background:gold; color:black; }
-.user-badge{ background:gray; }
-.delete-btn{
-  background:red;
-  margin-top:5px;
+
+input,textarea{
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+    border:none;
+    border-radius:10px;
+    outline:none;
+}
+
+button.submit-btn{
+    margin-top:15px;
+    width:100%;
+    padding:10px;
+    border:none;
+    border-radius:10px;
+    background:linear-gradient(45deg,#00c6ff,#0072ff);
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<header>
+    <div class="logo">🔥 Hidden Voice</div>
+    <div class="auth-buttons">
+        <button class="signup-btn" onclick="openSignup()">Sign Up</button>
+        <button class="login-btn" onclick="openLogin()">Login</button>
+    </div>
+</header>
 
-<h2>EchoSoul 🔐 Anonymous</h2>
+<div class="container" id="postContainer"></div>
 
-<!-- LOGIN / REGISTER -->
-<div id="authCard" class="card">
-<h3>Register</h3>
-<input id="regName" placeholder="Full Name">
-<select id="regType">
-<option value="email">Email</option>
-<option value="phone">Phone</option>
-</select>
-<input id="regIdentifier" placeholder="Email or Phone">
-<input id="regPassword" type="password" placeholder="Password">
-<button onclick="register()">Register</button>
+<div class="floating-btn" onclick="openPostModal()">+</div>
 
-<hr>
-
-<h3>Login</h3>
-<input id="loginIdentifier" placeholder="Email or Phone">
-<input id="loginPassword" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
+<!-- Signup Modal -->
+<div class="modal" id="signupModal">
+    <div class="modal-content">
+        <h3>Sign Up</h3>
+        <input type="text" id="signupName" placeholder="Enter your name">
+        <input type="email" id="signupEmail" placeholder="Enter your email">
+        <input type="password" id="signupPassword" placeholder="Enter password">
+        <button class="submit-btn" onclick="signup()">Create Account</button>
+    </div>
 </div>
 
-<!-- MAIN APP -->
-<div id="app" class="hidden">
-
-<div class="card">
-<p id="welcome"></p>
-<span id="roleBadge"></span>
-<button onclick="logout()">Logout</button>
+<!-- Login Modal -->
+<div class="modal" id="loginModal">
+    <div class="modal-content">
+        <h3>Login</h3>
+        <input type="email" id="loginEmail" placeholder="Enter your email">
+        <input type="password" id="loginPassword" placeholder="Enter password">
+        <button class="submit-btn" onclick="login()">Login</button>
+    </div>
 </div>
 
-<div class="card">
-<h3>Create Anonymous Post</h3>
-<textarea id="postText" placeholder="Write something..."></textarea>
-<button onclick="createPost()">Post</button>
-</div>
-
-<div class="card">
-<h3>Public Feed</h3>
-<div id="feed"></div>
-</div>
-
-</div>
-
+<!-- Post Modal -->
+<div class="modal" id="postModal">
+    <div class="modal-content">
+        <h3>Create Anonymous Post</h3>
+        <textarea id="postText" rows="4" placeholder="Share your thoughts..."></textarea>
+        <button class="submit-btn" onclick="addPost()">Post</button>
+    </div>
 </div>
 
 <script>
+let userSignedIn = false;
 
-let currentUserID=null;
-let currentRole="user";
-
-// 👑 DEFINE ADMIN LOGIN HERE
-const ADMIN_IDENTIFIER="admin@gmail.com";
-const ADMIN_PASSWORD="admin123";
-
-// REGISTER
-function register(){
-  let name=document.getElementById("regName").value;
-  let identifier=document.getElementById("regIdentifier").value;
-  let password=document.getElementById("regPassword").value;
-
-  if(name===""||identifier===""||password===""){
-    alert("Fill all details");
-    return;
-  }
-
-  let users=JSON.parse(localStorage.getItem("users")||"[]");
-
-  if(users.find(u=>u.identifier===identifier)){
-    alert("User already exists");
-    return;
-  }
-
-  let userID="user_"+Math.random().toString(36).substring(2,9);
-
-  users.push({
-    userID:userID,
-    name:name,
-    identifier:identifier,
-    password:password
-  });
-
-  localStorage.setItem("users",JSON.stringify(users));
-
-  alert("Registration successful");
+function openSignup(){
+    document.getElementById("signupModal").style.display="flex";
 }
 
-// LOGIN
-function login(){
-  let identifier=document.getElementById("loginIdentifier").value;
-  let password=document.getElementById("loginPassword").value;
-
-  // Admin Login
-  if(identifier===ADMIN_IDENTIFIER && password===ADMIN_PASSWORD){
-    currentUserID="admin";
-    currentRole="admin";
-    localStorage.setItem("session","admin");
-    openApp();
-    return;
-  }
-
-  let users=JSON.parse(localStorage.getItem("users")||"[]");
-
-  let user=users.find(u=>u.identifier===identifier && u.password===password);
-
-  if(!user){
-    alert("Invalid login");
-    return;
-  }
-
-  currentUserID=user.userID;
-  currentRole="user";
-
-  localStorage.setItem("session",currentUserID);
-
-  openApp();
+function openLogin(){
+    document.getElementById("loginModal").style.display="flex";
 }
 
-function openApp(){
-  document.getElementById("authCard").classList.add("hidden");
-  document.getElementById("app").classList.remove("hidden");
+function signup(){
+    let name = document.getElementById("signupName").value;
+    let email = document.getElementById("signupEmail").value;
+    let password = document.getElementById("signupPassword").value;
 
-  if(currentRole==="admin"){
-    document.getElementById("welcome").innerText="Welcome Admin";
-    document.getElementById("roleBadge").innerHTML="<span class='badge admin-badge'>Admin</span>";
-  }else{
-    document.getElementById("welcome").innerText="Welcome User";
-    document.getElementById("roleBadge").innerHTML="<span class='badge user-badge'>User</span>";
-  }
-
-  renderFeed();
-}
-
-// LOGOUT
-function logout(){
-  localStorage.removeItem("session");
-  location.reload();
-}
-
-// CREATE POST (ANONYMOUS)
-function createPost(){
-  let text=document.getElementById("postText").value;
-  if(text===""){return;}
-
-  let posts=JSON.parse(localStorage.getItem("posts")||"[]");
-
-  posts.push({
-    ownerID:currentUserID, // internal only
-    text:text,
-    createdAt:new Date()
-  });
-
-  localStorage.setItem("posts",JSON.stringify(posts));
-  document.getElementById("postText").value="";
-  renderFeed();
-}
-
-// RENDER FEED (NO IDENTITY SHOWN)
-function renderFeed(){
-  let posts=JSON.parse(localStorage.getItem("posts")||"[]");
-  let feed=document.getElementById("feed");
-  feed.innerHTML="";
-
-  posts.slice().reverse().forEach((p,index)=>{
-    feed.innerHTML+=`
-      <div class="feed-item">
-        <b>Anonymous</b>: ${p.text}
-        ${currentRole==="admin" ? 
-          `<button class="delete-btn" onclick="deletePost(${posts.length-1-index})">Delete</button>` 
-          : ""}
-      </div>
-    `;
-  });
-}
-
-// DELETE (ADMIN ONLY)
-function deletePost(index){
-  let posts=JSON.parse(localStorage.getItem("posts")||"[]");
-  posts.splice(index,1);
-  localStorage.setItem("posts",JSON.stringify(posts));
-  renderFeed();
-}
-
-// AUTO LOGIN
-window.onload=function(){
-  let session=localStorage.getItem("session");
-  if(session){
-    if(session==="admin"){
-      currentUserID="admin";
-      currentRole="admin";
+    if(name && email && password){
+        userSignedIn = true;
+        document.getElementById("signupModal").style.display="none";
+        alert("Account created successfully!");
     }else{
-      currentUserID=session;
-      currentRole="user";
+        alert("Please fill all details");
     }
-    openApp();
-  }
 }
 
+function login(){
+    let email = document.getElementById("loginEmail").value;
+    let password = document.getElementById("loginPassword").value;
+
+    if(email && password){
+        userSignedIn = true;
+        document.getElementById("loginModal").style.display="none";
+        alert("Login successful!");
+    }else{
+        alert("Please fill all details");
+    }
+}
+
+function openPostModal(){
+    if(!userSignedIn){
+        alert("Please login first");
+        return;
+    }
+    document.getElementById("postModal").style.display="flex";
+}
+
+function addPost(){
+    let text = document.getElementById("postText").value;
+    if(text){
+        let container = document.getElementById("postContainer");
+
+        let card = document.createElement("div");
+        card.className="post-card";
+        card.innerHTML = `<p>${text}</p>`;
+
+        container.prepend(card);
+        document.getElementById("postText").value="";
+        document.getElementById("postModal").style.display="none";
+    }
+}
 </script>
 
 </body>
-</html>
+  </html>
