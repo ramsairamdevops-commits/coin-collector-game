@@ -1,291 +1,230 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Premium Pro Startup Dashboard</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EchoSoul X</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700;900&display=swap" rel="stylesheet">
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
-
 body{
-background:linear-gradient(135deg,#141e30,#243b55);
-color:#fff;
-display:flex;
-min-height:100vh;
-overflow:hidden;
+  margin:0;
+  font-family:Inter;
+  background:#0f172a;
+  color:white;
+  transition:.4s;
 }
 
-/* Sidebar */
-.sidebar{
-width:250px;
-background:rgba(0,0,0,0.4);
-backdrop-filter:blur(20px);
-padding:20px;
-display:flex;
-flex-direction:column;
-transition:0.4s;
+.light{
+  background:#f1f5f9;
+  color:#111;
 }
 
-.sidebar h2{
-margin-bottom:30px;
-}
-
-.nav-item{
-padding:12px;
-margin:8px 0;
-border-radius:10px;
-cursor:pointer;
-transition:0.3s;
-}
-
-.nav-item:hover{
-background:rgba(255,255,255,0.1);
-}
-
-/* Main */
-.main{
-flex:1;
-padding:25px;
-overflow-y:auto;
-}
-
-header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:20px;
-}
-
-.search{
-padding:10px;
-border-radius:20px;
-border:none;
-width:220px;
-}
-
-.profile{
-background:#ffcc00;
-color:#000;
-padding:8px 15px;
-border-radius:20px;
-font-weight:600;
-}
-
-/* Cards */
-.cards{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-gap:20px;
-margin-top:20px;
+.container{
+  max-width:600px;
+  margin:auto;
+  padding:20px;
 }
 
 .card{
-background:rgba(255,255,255,0.08);
-padding:20px;
-border-radius:20px;
-backdrop-filter:blur(15px);
-box-shadow:0 10px 30px rgba(0,0,0,0.5);
-transition:0.3s;
+  background:rgba(255,255,255,.08);
+  backdrop-filter:blur(20px);
+  padding:20px;
+  border-radius:20px;
+  margin-bottom:20px;
+  animation:fade .8s ease;
 }
 
-.card:hover{
-transform:translateY(-8px);
-}
-
-/* Sections */
-.section{
-display:none;
-animation:fade 0.4s ease;
-}
-
-.active{
-display:block;
-}
-
-.dashboard{
-margin-top:30px;
-background:rgba(255,255,255,0.08);
-padding:20px;
-border-radius:20px;
-}
-
-/* Users Table */
-table{
-width:100%;
-margin-top:20px;
-border-collapse:collapse;
-}
-
-th,td{
-padding:12px;
-text-align:left;
-}
-
-th{
-background:rgba(255,255,255,0.1);
-}
-
-tr:nth-child(even){
-background:rgba(255,255,255,0.05);
-}
-
-/* Animation */
 @keyframes fade{
-from{opacity:0;}
-to{opacity:1;}
+  from{opacity:0;transform:translateY(20px);}
+  to{opacity:1;transform:translateY(0);}
 }
 
-/* Mobile */
-@media(max-width:768px){
-.sidebar{
-position:absolute;
-left:-260px;
-height:100%;
-z-index:999;
+input,textarea,select{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  margin-top:10px;
+  background:rgba(255,255,255,.1);
+  color:inherit;
 }
-.sidebar.show{
-left:0;
+
+button{
+  margin-top:10px;
+  padding:10px;
+  width:100%;
+  border:none;
+  border-radius:12px;
+  font-weight:600;
+  cursor:pointer;
+  background:linear-gradient(45deg,#6366f1,#ec4899);
+  color:white;
 }
+
+.hidden{display:none;}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.badge{
+  background:gold;
+  color:black;
+  padding:5px 10px;
+  border-radius:50px;
+  font-size:12px;
+}
+
+.feed-item{
+  padding:10px;
+  border-radius:12px;
+  background:rgba(255,255,255,.05);
+  margin-top:10px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="sidebar" id="sidebar">
-<h2>🔥 Premium</h2>
-<div class="nav-item" onclick="showSection('dashboard')">Dashboard</div>
-<div class="nav-item" onclick="showSection('users')">Users</div>
-<div class="nav-item" onclick="showSection('reports')">Reports</div>
-<div class="nav-item" onclick="showSection('settings')">Settings</div>
-<div class="nav-item" onclick="showSection('about')">About</div>
+<div class="container">
+
+<div class="header">
+<h2>EchoSoul X</h2>
+<button onclick="toggleMode()">🌗</button>
 </div>
 
-<div class="main">
-
-<header>
-<input type="text" class="search" placeholder="Search...">
-<div>
-<span class="profile">Admin</span>
+<!-- LOGIN -->
+<div id="loginCard" class="card">
+<h3>🔐 Login / Signup</h3>
+<input id="username" placeholder="Username">
+<input id="password" type="password" placeholder="Password">
+<button onclick="login()">Enter</button>
 </div>
-</header>
 
-<!-- DASHBOARD -->
-<div id="dashboard" class="section active">
-<h2>Dashboard Overview</h2>
+<!-- MAIN APP -->
+<div id="app" class="hidden">
 
-<div class="cards">
 <div class="card">
-<h3>Total Revenue</h3>
-<h2 id="rev">₹0</h2>
+<h3>Profile</h3>
+<p id="welcome"></p>
+<div id="proStatus" class="badge">Free</div>
+<button onclick="upgrade()">Upgrade to Pro</button>
 </div>
+
 <div class="card">
-<h3>Total Users</h3>
-<h2 id="usersCount">0</h2>
+<h3>🧠 AI Personality</h3>
+<select id="personality">
+<option value="motivator">Motivator</option>
+<option value="therapist">Therapist</option>
+<option value="friend">Friendly Companion</option>
+<option value="philosopher">Philosopher</option>
+</select>
+<textarea id="thought" placeholder="Share your thoughts..."></textarea>
+<button onclick="askAI()">Talk to AI</button>
+<div id="aiResponse"></div>
 </div>
+
 <div class="card">
-<h3>Orders</h3>
-<h2 id="orders">0</h2>
-</div>
-<div class="card">
-<h3>Performance</h3>
-<h2>98%</h2>
-</div>
+<h3>🌍 Public Feed</h3>
+<button onclick="post()">Post Public</button>
+<div id="feed"></div>
 </div>
 
-<div class="dashboard">
-<h3>Growth Analytics</h3>
-<canvas id="chart"></canvas>
-</div>
-</div>
-
-<!-- USERS -->
-<div id="users" class="section">
-<h2>User Management</h2>
-<table>
-<tr><th>Name</th><th>Email</th><th>Status</th></tr>
-<tr><td>Ravi</td><td>ravi@email.com</td><td>Active</td></tr>
-<tr><td>Sita</td><td>sita@email.com</td><td>Active</td></tr>
-<tr><td>Arjun</td><td>arjun@email.com</td><td>Inactive</td></tr>
-</table>
-</div>
-
-<!-- REPORTS -->
-<div id="reports" class="section">
-<h2>Business Reports</h2>
-<p>Monthly performance and revenue breakdown.</p>
-</div>
-
-<!-- SETTINGS -->
-<div id="settings" class="section">
-<h2>Settings</h2>
-<button onclick="toggleDark()">Toggle Dark Mode</button>
-</div>
-
-<!-- ABOUT -->
-<div id="about" class="section">
-<h2>About Application</h2>
-<p>This is a premium startup style admin dashboard demo application.</p>
 </div>
 
 </div>
 
 <script>
+let currentUser=null;
+let isPro=false;
 
-/* Section Navigation */
-function showSection(id){
-document.querySelectorAll(".section").forEach(sec=>sec.classList.remove("active"));
-document.getElementById(id).classList.add("active");
+function toggleMode(){
+  document.body.classList.toggle("light");
 }
 
-/* Dark Mode */
-function toggleDark(){
-document.body.classList.toggle("dark");
+function login(){
+  let u=document.getElementById("username").value;
+  let p=document.getElementById("password").value;
+
+  if(u===""||p===""){
+    alert("Fill details");
+    return;
+  }
+
+  localStorage.setItem("user",u);
+  currentUser=u;
+  document.getElementById("loginCard").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  document.getElementById("welcome").innerText="Welcome "+u;
 }
 
-/* Animated Counters */
-function animateValue(id, start, end, duration) {
-let range = end - start;
-let current = start;
-let increment = end > start?1:-1;
-let stepTime = Math.abs(Math.floor(duration / range));
-let obj = document.getElementById(id);
-let timer = setInterval(function() {
-current += increment;
-obj.innerHTML = id === "rev" ? "₹" + current : current;
-if (current == end) clearInterval(timer);
-}, stepTime);
+function upgrade(){
+  isPro=true;
+  document.getElementById("proStatus").innerText="Pro";
 }
 
-animateValue("rev",0,50000,2000);
-animateValue("usersCount",0,1200,2000);
-animateValue("orders",0,350,2000);
+function post(){
+  let text=document.getElementById("thought").value;
+  if(text==="")return;
 
-/* Chart */
-new Chart(document.getElementById("chart"),{
-type:"bar",
-data:{
-labels:["Jan","Feb","Mar","Apr","May","Jun"],
-datasets:[{
-label:"Revenue",
-data:[5000,8000,12000,15000,20000,25000],
-backgroundColor:"#ffcc00"
-}]
-},
-options:{
-responsive:true,
-plugins:{legend:{labels:{color:"#fff"}}},
-scales:{
-x:{ticks:{color:"#fff"}},
-y:{ticks:{color:"#fff"}}
+  let posts=JSON.parse(localStorage.getItem("posts")||"[]");
+  posts.push({user:currentUser,text:text});
+  localStorage.setItem("posts",JSON.stringify(posts));
+  renderFeed();
+  document.getElementById("thought").value="";
 }
-}
-});
 
+function renderFeed(){
+  let posts=JSON.parse(localStorage.getItem("posts")||"[]");
+  let feed=document.getElementById("feed");
+  feed.innerHTML="";
+  posts.reverse().forEach(p=>{
+    feed.innerHTML+=`<div class="feed-item"><b>${p.user}</b>: ${p.text}</div>`;
+  });
+}
+
+async function askAI(){
+  if(!isPro){
+    alert("Upgrade to Pro to unlock AI");
+    return;
+  }
+
+  let prompt=document.getElementById("thought").value;
+  let personality=document.getElementById("personality").value;
+  let box=document.getElementById("aiResponse");
+  box.innerHTML="Thinking...";
+
+  const API_KEY="PASTE_YOUR_OPENAI_API_KEY";
+
+  const systemPrompt={
+    motivator:"You are an energetic motivational coach.",
+    therapist:"You are a calm emotional therapist.",
+    friend:"You are a friendly supportive companion.",
+    philosopher:"You respond with deep philosophical insight."
+  };
+
+  const response=await fetch("https://api.openai.com/v1/chat/completions",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer "+API_KEY
+    },
+    body:JSON.stringify({
+      model:"gpt-4o-mini",
+      messages:[
+        {role:"system",content:systemPrompt[personality]},
+        {role:"user",content:prompt}
+      ]
+    })
+  });
+
+  const data=await response.json();
+  box.innerHTML="<p>"+data.choices[0].message.content+"</p>";
+}
+
+renderFeed();
 </script>
 
 </body>
