@@ -3,37 +3,74 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Emotion Wall - Next Level Premium</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<title>Anonymous Emotion Wall Premium</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{margin:0;font-family:'Poppins',sans-serif;transition:0.5s;background:linear-gradient(135deg,#141e30,#243b55);color:white;}
-.dark{background:#111;color:#eee;}
-header{display:flex;justify-content:space-between;align-items:center;padding:15px 20px;backdrop-filter:blur(10px);background:rgba(255,255,255,0.05);position:sticky;top:0;z-index:100;}
-.logo{font-size:20px;font-weight:700;}
-button{border:none;padding:8px 15px;border-radius:20px;cursor:pointer;font-weight:500;margin-left:10px;transition:0.3s;}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+
+/* ANIMATED GRADIENT BACKGROUND */
+body{
+  background: linear-gradient(-45deg,#1c1c2e,#2e2e4e,#1a1a40,#4b0082);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+  color:white;
+  transition:0.5s;
+}
+@keyframes gradientBG{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+.dark{background:#111;}
+
+header{display:flex;justify-content:space-between;align-items:center;padding:15px 20px;backdrop-filter:blur(10px);background:rgba(255,255,255,0.05);position:sticky;top:0;z-index:100;box-shadow:0 0 20px rgba(0,0,0,0.3);}
+.logo{font-size:20px;font-weight:700;animation:fadeUp 1s ease;}
+button{border:none;padding:8px 15px;border-radius:20px;cursor:pointer;font-weight:500;margin-left:10px;transition:0.3s;animation:fadeUp 1.2s ease;}
 button:hover{opacity:0.85;}
-.auth-btn{background:linear-gradient(45deg,#ff9966,#ff5e62);color:white;}
-.container{max-width:500px;margin:auto;padding:20px;}
-.post{background:rgba(255,255,255,0.08);padding:15px;border-radius:20px;margin-bottom:15px;backdrop-filter:blur(15px);animation:fadeIn 0.5s ease;box-shadow:0 10px 25px rgba(0,0,0,0.3);}
-.username{font-weight:600;margin-bottom:5px;}
-.emotion{font-size:14px;margin-bottom:8px;padding:5px 10px;border-radius:20px;display:inline-block;}
-.like-btn{margin-left:10px;cursor:pointer;}
-.floating{position:fixed;bottom:25px;right:25px;background:linear-gradient(45deg,#00f260,#0575e6);width:65px;height:65px;border-radius:50%;display:flex;justify-content:center;align-items:center;font-size:28px;box-shadow:0 10px 20px rgba(0,0,0,0.4);cursor:pointer;}
-.modal{display:none;position:fixed;width:100%;height:100%;background:rgba(0,0,0,0.8);justify-content:center;align-items:center;z-index:200;}
-.modal-content{background:#1c1c2e;padding:20px;border-radius:20px;width:90%;max-width:400px;}
-input,textarea,select{width:100%;padding:10px;margin-top:10px;border:none;border-radius:10px;outline:none;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
-footer{text-align:center;margin:30px 0;opacity:0.6;font-size:12px;}
+.auth-btn{background:linear-gradient(45deg,#ff9966,#ff5e62);color:white;box-shadow:0 5px 15px rgba(255,0,0,0.4);}
+
+.container{max-width:500px;margin:auto;padding:20px;position:relative;z-index:1;}
+.post{background:rgba(255,255,255,0.08);padding:15px;border-radius:20px;margin-bottom:15px;backdrop-filter:blur(15px);animation:fadeUp 0.5s ease;box-shadow:0 10px 25px rgba(0,0,0,0.4);transition:0.3s;}
+.post:hover{transform:translateY(-5px) scale(1.02);}
+
+.emotion{font-size:14px;margin-bottom:8px;padding:5px 10px;border-radius:20px;display:inline-block;animation:fadeUp 0.8s ease;}
+.like-btn{margin-left:10px;cursor:pointer;transition:0.3s;}
+.like-btn:hover{transform:scale(1.2);}
+
+.floating{position:fixed;bottom:25px;right:25px;background:linear-gradient(45deg,#00f260,#0575e6);width:65px;height:65px;border-radius:50%;display:flex;justify-content:center;align-items:center;font-size:28px;box-shadow:0 10px 25px rgba(0,0,0,0.5);cursor:pointer;animation:float 2s ease-in-out infinite;}
+
+@keyframes float{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-15px);}
+}
+
+.loginModal, .signupModal, .postModal{
+  display:none;
+  position:fixed;
+  width:100%;height:100%;
+  background:rgba(0,0,0,0.85);
+  justify-content:center;align-items:center;z-index:200;
+  animation:fadeUp 0.8s ease;
+}
+.modal-content{background:#1c1c2e;padding:20px;border-radius:20px;width:90%;max-width:400px;box-shadow:0 10px 40px rgba(0,0,0,0.6);animation:fadeUp 0.8s ease;}
+input,textarea,select{width:100%;padding:12px;margin-top:10px;border-radius:12px;border:none;outline:none;background:rgba(255,255,255,0.05);color:white;transition:0.3s;}
+input:focus,textarea:focus,select:focus{background:rgba(255,255,255,0.12);}
+textarea{resize:none;}
+
+@keyframes fadeUp{from{opacity:0; transform:translateY(20px);}to{opacity:1; transform:translateY(0);}}
+
+footer{text-align:center;margin:30px 0;opacity:0.6;font-size:12px;position:relative;z-index:1;}
 </style>
 </head>
 <body>
 
 <header>
-    <div class="logo">💎 Emotion Wall Premium</div>
+    <div class="logo">💎 Anonymous Emotion Wall</div>
     <div>
         <button class="auth-btn" onclick="openLogin()">Login</button>
         <button class="auth-btn" onclick="openSignup()">Sign Up</button>
@@ -46,27 +83,29 @@ footer{text-align:center;margin:30px 0;opacity:0.6;font-size:12px;}
 <div class="floating" onclick="openPost()">+</div>
 
 <!-- Login Modal -->
-<div class="modal" id="loginModal">
+<div class="loginModal" id="loginModal">
     <div class="modal-content">
         <h3>Login</h3>
-        <input type="text" id="loginName" placeholder="Your Name">
+        <input type="email" id="loginEmail" placeholder="Email">
+        <input type="password" id="loginPassword" placeholder="Password">
         <button class="auth-btn" onclick="login()">Login</button>
     </div>
 </div>
 
 <!-- Sign Up Modal -->
-<div class="modal" id="signupModal">
+<div class="signupModal" id="signupModal">
     <div class="modal-content">
         <h3>Sign Up</h3>
         <input type="text" id="signupName" placeholder="Name">
         <input type="email" id="signupEmail" placeholder="Email">
+        <input type="password" id="signupPassword" placeholder="Password">
         <input type="tel" id="signupPhone" placeholder="Phone">
         <button class="auth-btn" onclick="signup()">Sign Up</button>
     </div>
 </div>
 
 <!-- Post Modal -->
-<div class="modal" id="postModal">
+<div class="postModal" id="postModal">
     <div class="modal-content">
         <h3>Share Your Emotion</h3>
         <select id="emotionSelect">
@@ -81,16 +120,16 @@ footer{text-align:center;margin:30px 0;opacity:0.6;font-size:12px;}
     </div>
 </div>
 
-<!-- Emotion Analytics -->
+<!-- Mood Analytics -->
 <div class="container">
 <h3>📊 Mood Analytics</h3>
 <canvas id="emotionChart"></canvas>
 </div>
 
-<footer>© 2026 Emotion Wall Premium | Mobile & Desktop</footer>
+<footer>© 2026 Anonymous Emotion Wall | Mobile & Desktop</footer>
 
 <script>
-// Firebase Config
+// Firebase Config (replace YOUR_PROJECT etc.)
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -102,52 +141,60 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-
-let currentUser = "";
-const emotionColors = {
-  "😊 Happy":"#ffeb3b","😢 Sad":"#2196f3","❤️ Love":"#e91e63","😡 Angry":"#f44336","🔥 Motivated":"#ff9800"
-};
+const auth = firebase.auth();
+let currentUser = null;
+const emotionColors={"😊 Happy":"#ffeb3b","😢 Sad":"#2196f3","❤️ Love":"#e91e63","😡 Angry":"#f44336","🔥 Motivated":"#ff9800"};
 
 // Dark Mode
 function toggleDark(){document.body.classList.toggle("dark");}
 
-// Login & Signup
+// Modals
 function openLogin(){document.getElementById("loginModal").style.display="flex";}
 function openSignup(){document.getElementById("signupModal").style.display="flex";}
+function openPost(){if(!currentUser){alert("Login/Sign Up first");return;}document.getElementById("postModal").style.display="flex";}
 
-function login(){
-    let name=document.getElementById("loginName").value;
-    if(name){currentUser=name;document.getElementById("loginModal").style.display="none";loadPosts();}
-    else alert("Enter your name");
-}
-
+// Sign Up
 function signup(){
     let name=document.getElementById("signupName").value;
     let email=document.getElementById("signupEmail").value;
+    let password=document.getElementById("signupPassword").value;
     let phone=document.getElementById("signupPhone").value;
-    if(name && email && phone){
-        currentUser=name;
-        db.ref('users').push({name,email,phone});
-        document.getElementById("signupModal").style.display="none";
-        loadPosts();
+    if(name && email && password && phone){
+        auth.createUserWithEmailAndPassword(email,password).then(userCred=>{
+            currentUser=userCred.user.uid;
+            db.ref('users/'+currentUser).set({name,phone,email});
+            document.getElementById("signupModal").style.display="none";
+            loadPosts();
+        }).catch(e=>alert(e.message));
     } else alert("Fill all details");
 }
 
-// Post Modal
-function openPost(){if(!currentUser){alert("Login/Sign Up first");return;}document.getElementById("postModal").style.display="flex";}
+// Login
+function login(){
+    let email=document.getElementById("loginEmail").value;
+    let password=document.getElementById("loginPassword").value;
+    if(email && password){
+        auth.signInWithEmailAndPassword(email,password).then(userCred=>{
+            currentUser=userCred.user.uid;
+            document.getElementById("loginModal").style.display="none";
+            loadPosts();
+        }).catch(e=>alert(e.message));
+    } else alert("Enter email & password");
+}
 
-// Add Post
+// Add Post (Anonymous)
 function addPost(){
     let text=document.getElementById("postText").value;
     let emotion=document.getElementById("emotionSelect").value;
     if(text){
-        db.ref('posts').push({user:currentUser,emotion,text,likes:0});
+        const now=Date.now();
+        db.ref('posts').push({user:currentUser,emotion,text,likes:0,timestamp:now});
         document.getElementById("postText").value="";
         document.getElementById("postModal").style.display="none";
     }
 }
 
-// Load Posts & Trending
+// Load Posts
 function loadPosts(){
     db.ref('posts').on('value', snapshot=>{
         const postsContainer=document.getElementById("posts");
@@ -157,16 +204,17 @@ function loadPosts(){
         const data=snapshot.val();
         const emotionCount={"😊 Happy":0,"😢 Sad":0,"❤️ Love":0,"😡 Angry":0,"🔥 Motivated":0};
         if(!data) return;
+        const now=Date.now();
         for(let key in data){
             const p=data[key];
+            if(now - p.timestamp > 24*60*60*1000){db.ref('posts/'+key).remove(); continue;}
             emotionCount[p.emotion]++;
             const div=document.createElement("div");
             div.className="post";
             div.style.borderLeft=`5px solid ${emotionColors[p.emotion]}`;
-            div.innerHTML=`<div class="username">${p.user}</div><div class="emotion">${p.emotion}</div><div>${p.text}</div><span class="like-btn" onclick="likePost('${key}')">❤️ ${p.likes}</span>`;
+            div.innerHTML=`<div class="emotion">${p.emotion}</div><div>${p.text}</div><span class="like-btn" onclick="likePost('${key}')">❤️ ${p.likes}</span>`;
             postsContainer.prepend(div);
         }
-        // Update trending
         const sorted=Object.keys(emotionCount).sort((a,b)=>emotionCount[b]-emotionCount[a]);
         sorted.forEach(em=>{if(emotionCount[em]>0){const t=document.createElement("div");t.className="post";t.style.borderLeft=`5px solid ${emotionColors[em]}`;t.innerHTML=`<div class="emotion">${em} - ${emotionCount[em]} posts</div>`; trendingContainer.appendChild(t);}});
         updateChart(emotionCount);
@@ -175,7 +223,7 @@ function loadPosts(){
 }
 
 // Like Post
-function likePost(key){ db.ref(`posts/${key}/likes`).transaction(likes=>(likes||0)+1); }
+function likePost(key){ db.ref('posts/'+key+'/likes').transaction(likes=>(likes||0)+1); }
 
 // Chart
 const ctx=document.getElementById('emotionChart').getContext('2d');
@@ -194,6 +242,5 @@ function updateBackground(counts){
 }
 
 </script>
-
 </body>
 </html>
