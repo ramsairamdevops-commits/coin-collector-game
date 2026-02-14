@@ -2,84 +2,126 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NeuroSync Prototype</title>
+<title>PeerQuantum Habit Mesh - Adaptive Demo</title>
 <style>
-body{margin:0;font-family:sans-serif;background:#111;color:#fff;overflow:hidden;}
-#network{position:absolute;top:0;left:0;width:100vw;height:100vh;}
-#sidebar{position:absolute;top:0;right:0;width:200px;height:100vh;background:#222;padding:10px;}
-.node{position:absolute;width:30px;height:30px;border-radius:50%;text-align:center;line-height:30px;color:#000;font-weight:bold;}
-button{margin:5px;padding:5px;width:100%;}
+  body {
+    font-family: Arial, sans-serif;
+    background: #0b0c1d;
+    color: #fff;
+    margin: 0;
+    padding: 20px;
+  }
+  .container { max-width: 500px; margin: auto; }
+  h1 { text-align: center; color: #6cf; }
+  label { display: block; margin-top: 15px; }
+  select, button { padding: 10px; font-size: 1em; margin-top: 5px; width: 100%; }
+  .habit-card { background: #1a1b36; margin-top: 15px; padding: 15px; border-radius: 10px; text-align: center; }
+  .habit-card button { margin-top: 10px; }
+  .nudge { color: #0f0; font-weight: bold; margin-top: 10px; }
+  .high-contrast { background: #000; color: #fff; }
 </style>
 </head>
 <body>
+<div class="container">
+  <h1>PeerQuantum Habit Mesh</h1>
 
-<canvas id="network"></canvas>
-<div id="sidebar">
-<h3>Personal Mood</h3>
-<label>Happiness: <input type="range" id="happy" min="0" max="100" value="50"></label><br>
-<label>Anger: <input type="range" id="anger" min="0" max="100" value="0"></label><br>
-<label>Focus: <input type="range" id="focus" min="0" max="100" value="50"></label><br>
-<input type="text" id="wordInput" placeholder="Type word...">
-<input type="color" id="colorInput" value="#00ff00">
-<button onclick="sendChoice()">Add Node</button>
+  <!-- Profile Selector -->
+  <label for="profile">Select Profile / Persona:</label>
+  <select id="profile">
+    <option value="child">Child</option>
+    <option value="teen">Teen</option>
+    <option value="adult">Adult</option>
+    <option value="senior">Senior</option>
+    <option value="guardian">Family Guardian</option>
+  </select>
+
+  <!-- Accessibility Toggle -->
+  <label>
+    <input type="checkbox" id="highContrast"> High Contrast Mode
+  </label>
+  <label>
+    <input type="checkbox" id="voiceMode"> Enable Voice Input/Output
+  </label>
+
+  <!-- Habit Cards -->
+  <div id="habits"></div>
 </div>
 
-<script>
-const canvas=document.getElementById('network');
-const ctx=canvas.getContext('2d');
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight;
-let nodes=[];
+<script type="module">
+  // === Sample Habit Data by Persona ===
+  const habitsByProfile = {
+    child: ["Brush Teeth", "Homework", "Playtime"],
+    teen: ["Exercise", "Study", "Social Time"],
+    adult: ["Work", "Exercise", "Family Time"],
+    senior: ["Medicine", "Walk", "Reading"],
+    guardian: ["Monitor Kids", "Encourage Seniors", "Family Check-ins"]
+  };
 
-// WebSocket connection
-const ws = new WebSocket('ws://localhost:8080');
+  const profileSelect = document.getElementById('profile');
+  const habitsDiv = document.getElementById('habits');
+  const highContrastCheckbox = document.getElementById('highContrast');
+  const voiceCheckbox = document.getElementById('voiceMode');
 
-ws.onmessage = (msg)=>{
-    const data = JSON.parse(msg.data);
-    if(data.type==='updateGraph'){
-        nodes = data.graph;
-    }
-}
+  // Render habit cards based on profile
+  function renderHabits(profile) {
+    habitsDiv.innerHTML = '';
+    const habits = habitsByProfile[profile] || [];
+    habits.forEach(habit => {
+      const card = document.createElement('div');
+      card.className = 'habit-card';
+      card.innerHTML = `
+        <div>${habit}</div>
+        <button>Check-In ✅</button>
+        <div class="nudge">Nudge: ${generateNudge(profile)}</div>
+      `;
+      habitsDiv.appendChild(card);
 
-// Send choice
-function sendChoice(){
-    const word=document.getElementById('wordInput').value||'';
-    const color=document.getElementById('colorInput').value;
-    ws.send(JSON.stringify({type:'nodeChoice', word, color}));
-}
-
-// Draw loop
-function draw(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    nodes.forEach((n,i)=>{
-        const x = 100 + i*50 % (canvas.width-200);
-        const y = 50 + Math.floor(i/10)*50;
-        // draw node
-        ctx.fillStyle = n.color;
-        ctx.beginPath();
-        ctx.arc(x,y,15,0,Math.PI*2);
-        ctx.fill();
-        ctx.fillStyle="#000";
-        ctx.fillText(n.word.slice(0,2),x-7,y+5);
-
-        // draw edges (connect to previous node)
-        if(i>0){
-            const prev = nodes[i-1];
-            const px = 100 + (i-1)*50 % (canvas.width-200);
-            const py = 50 + Math.floor((i-1)/10)*50;
-            ctx.strokeStyle = n.color;
-            ctx.lineWidth=2;
-            ctx.beginPath();
-            ctx.moveTo(x,y);
-            ctx.lineTo(px,py);
-            ctx.stroke();
-        }
+      const btn = card.querySelector('button');
+      btn.addEventListener('click', () => {
+        alert(`Checked in: ${habit}`);
+        if (voiceCheckbox.checked) speak(`Great job! You completed ${habit}`);
+      });
     });
-    requestAnimationFrame(draw);
-}
-draw();
-</script>
+  }
 
+  // Nudge messages based on profile
+  function generateNudge(profile) {
+    switch(profile) {
+      case 'child': return "Play and learn!";
+      case 'teen': return "Stay focused!";
+      case 'adult': return "Keep your balance!";
+      case 'senior': return "Keep moving gently!";
+      case 'guardian': return "Guide your family!";
+      default: return "";
+    }
+  }
+
+  // Voice Output using Web Speech API
+  function speak(text) {
+    if (!('speechSynthesis' in window)) return;
+    const utterance = new SpeechSynthesisUtterance(text);
+    speechSynthesis.speak(utterance);
+  }
+
+  // Accessibility toggles
+  highContrastCheckbox.addEventListener('change', () => {
+    document.body.classList.toggle('high-contrast', highContrastCheckbox.checked);
+  });
+
+  profileSelect.addEventListener('change', () => {
+    renderHabits(profileSelect.value);
+  });
+
+  // Initialize default profile
+  renderHabits(profileSelect.value);
+
+  // === Placeholder P2P Family Mesh ===
+  async function startFamilyMesh() {
+    console.log("P2P Family Mesh initialized (placeholder)");
+    // You can integrate libp2p or WebRTC mesh here
+  }
+
+  startFamilyMesh();
+</script>
 </body>
 </html>
