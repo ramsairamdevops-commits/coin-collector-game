@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Premium Startup App</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+body{
+background:linear-gradient(135deg,#141e30,#243b55);
+color:white;
+min-height:100vh;
+overflow-x:hidden;
+transition:0.4s;
+}
+
+/* Splash Screen */
+#splash{
+position:fixed;
+top:0;left:0;
+width:100%;height:100%;
+background:#111;
+display:flex;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+z-index:9999;
+animation:fadeOut 1s ease forwards;
+animation-delay:2s;
+}
+@keyframes fadeOut{
+to{opacity:0;visibility:hidden;}
+}
+.logo-big{
+font-size:28px;
+font-weight:700;
+margin-bottom:10px;
+}
+.loader{
+border:4px solid #333;
+border-top:4px solid #ffcc00;
+border-radius:50%;
+width:40px;height:40px;
+animation:spin 1s linear infinite;
+}
+@keyframes spin{
+100%{transform:rotate(360deg);}
+}
+
+/* Header */
+header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px;
+background:rgba(255,255,255,0.08);
+backdrop-filter:blur(12px);
+position:sticky;top:0;
+}
+
+button{
+padding:12px 18px;
+border:none;
+border-radius:25px;
+background:#ffcc00;
+color:#000;
+font-weight:600;
+cursor:pointer;
+margin:5px 0;
+}
+
+.container{padding:20px;animation:fadeIn 0.6s ease;}
+@keyframes fadeIn{
+from{opacity:0;transform:translateY(15px);}
+to{opacity:1;transform:translateY(0);}
+}
+
+.card{
+background:rgba(255,255,255,0.08);
+padding:20px;
+border-radius:20px;
+margin:15px 0;
+backdrop-filter:blur(15px);
+box-shadow:0 8px 25px rgba(0,0,0,0.5);
+}
+
+input{
+width:100%;
+padding:12px;
+margin:10px 0;
+border-radius:10px;
+border:none;
+}
+
+.hidden{display:none;}
+
+.navbar{
+display:flex;
+justify-content:space-around;
+background:rgba(255,255,255,0.08);
+padding:10px;
+position:fixed;
+bottom:0;
+width:100%;
+}
+
+.navbar button{
+background:none;
+color:white;
+font-size:14px;
+}
+
+.dark{
+background:#111;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- Splash -->
+<div id="splash">
+<div class="logo-big">🚀 Startup Pro</div>
+<div class="loader"></div>
+</div>
+
+<!-- Login Page -->
+<div id="loginPage" class="container">
+<h2>Login / Register</h2>
+<input type="text" id="username" placeholder="Enter Username">
+<input type="password" id="password" placeholder="Enter Password">
+<button onclick="login()">Continue</button>
+</div>
+
+<!-- Main App -->
+<div id="appPage" class="hidden">
+
+<header>
+<div>🚀 Startup Pro</div>
+<button onclick="toggleMode()">Dark Mode</button>
+</header>
+
+<div id="home" class="container">
+<div class="card">
+<h3>Welcome <span id="displayUser"></span></h3>
+<p>Here is your live analytics overview.</p>
+</div>
+
+<div class="card">
+<h3>Monthly Growth</h3>
+<canvas id="chart"></canvas>
+</div>
+</div>
+
+<div id="profile" class="container hidden">
+<div class="card">
+<h3>User Profile</h3>
+<p><strong>Username:</strong> <span id="profileUser"></span></p>
+<p>Member Since: <span id="memberDate"></span></p>
+</div>
+</div>
+
+<div id="about" class="container hidden">
+<div class="card">
+<h3>About</h3>
+<p>This is a premium startup-ready PWA built with HTML, CSS & JS.</p>
+</div>
+</div>
+
+<div id="contact" class="container hidden">
+<div class="card">
+<h3>Contact</h3>
+<p>Email: support@startupapp.com</p>
+<p>Phone: +91 0000000000</p>
+</div>
+</div>
+
+<div class="navbar">
+<button onclick="showPage('home')">Home</button>
+<button onclick="showPage('profile')">Profile</button>
+<button onclick="showPage('about')">About</button>
+<button onclick="showPage('contact')">Contact</button>
+</div>
+
+</div>
+
+<script>
+
+// LOGIN WITH LOCAL STORAGE
+function login(){
+let user=document.getElementById("username").value;
+let pass=document.getElementById("password").value;
+
+if(user && pass){
+localStorage.setItem("user",user);
+localStorage.setItem("date",new Date().toLocaleDateString());
+openApp();
+}
+}
+
+function openApp(){
+let user=localStorage.getItem("user");
+if(user){
+document.getElementById("loginPage").classList.add("hidden");
+document.getElementById("appPage").classList.remove("hidden");
+document.getElementById("displayUser").innerText=user;
+document.getElementById("profileUser").innerText=user;
+document.getElementById("memberDate").innerText=localStorage.getItem("date");
+}
+}
+
+window.onload=openApp;
+
+function toggleMode(){
+document.body.classList.toggle("dark");
+}
+
+function showPage(page){
+["home","profile","about","contact"].forEach(p=>{
+document.getElementById(p).classList.add("hidden");
+});
+document.getElementById(page).classList.remove("hidden");
+}
+
+// Chart
+setTimeout(()=>{
+if(document.getElementById("chart")){
+new Chart(document.getElementById("chart"),{
+type:'bar',
+data:{
+labels:["Jan","Feb","Mar","Apr","May","Jun"],
+datasets:[{
+label:"Revenue",
+data:[12,19,10,15,22,30],
+backgroundColor:"#ffcc00"
+}]
+}
+});
+}
+},500);
+
+</script>
+
+</body>
+</html>
