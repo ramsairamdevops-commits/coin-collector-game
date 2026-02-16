@@ -1,242 +1,221 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Kirana Network</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
-
+<meta charset="UTF-8">
+<title>Kirana Startup App</title>
 <style>
-body{font-family:'Poppins',sans-serif;margin:0;background:#f4f6f9;}
-header{background:linear-gradient(45deg,#1b5e20,#2e7d32);
-color:white;padding:15px;text-align:center;font-weight:600;}
-.card{background:white;margin:15px;padding:15px;
-border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.08);}
-button{background:#1b5e20;color:white;border:none;
-padding:10px;border-radius:8px;width:100%;margin-top:8px;}
-input,select{width:100%;padding:10px;margin:6px 0;
-border-radius:8px;border:1px solid #ddd;}
-.hidden{display:none;}
-.status{padding:5px 10px;border-radius:20px;font-size:12px;}
-.pending{background:#fff3cd;}
-.delivered{background:#d4edda;}
+body{font-family:Arial;background:#f4f4f4;margin:0;padding:0}
+header{background:#2e7d32;color:white;padding:15px;text-align:center}
+.container{padding:20px}
+input,select{padding:8px;margin:5px;width:95%}
+button{padding:10px;background:#2e7d32;color:white;border:none;cursor:pointer}
+.card{background:white;padding:15px;margin:10px 0;border-radius:8px}
+.hidden{display:none}
 </style>
 </head>
-
 <body>
 
-<header>🛒 Smart Kirana Network</header>
+<header>
+<h2>Kirana Local Shop App</h2>
+</header>
 
-<div class="card">
+<div class="container">
+
+<!-- LOGIN / REGISTER -->
+<div id="authSection">
 <h3>Login / Register</h3>
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
+<input type="text" id="mobile" placeholder="Mobile Number">
+<input type="password" id="password" placeholder="Password">
 <select id="role">
 <option value="customer">Customer</option>
 <option value="shop">Shop Owner</option>
-<option value="delivery">Delivery Boy</option>
 <option value="admin">Admin</option>
 </select>
 <button onclick="register()">Register</button>
 <button onclick="login()">Login</button>
 </div>
 
-<div id="dashboard" class="hidden">
+<!-- CUSTOMER DASHBOARD -->
+<div id="customerSection" class="hidden">
+<h3>Customer Dashboard</h3>
+<div id="shopList"></div>
+<h4>Cart</h4>
+<div id="cart"></div>
+<button onclick="placeOrder()">Place Order</button>
+<button onclick="logout()">Logout</button>
+</div>
 
-<!-- SHOP PANEL -->
-<div id="shopPanel" class="card hidden">
-<h3>Shop Panel</h3>
-<input id="shopName" placeholder="Shop Name">
-<button onclick="createShop()">Create Shop</button>
+<!-- SHOP OWNER DASHBOARD -->
+<div id="shopSection" class="hidden">
+<h3>Shop Owner Dashboard</h3>
+<input type="text" id="shopName" placeholder="Shop Name">
+<button onclick="saveShop()">Save Shop</button>
 
 <h4>Add Product</h4>
-<input id="pname" placeholder="Product Name">
-<input id="pprice" type="number" placeholder="Price">
+<input type="text" id="productName" placeholder="Product Name">
+<input type="number" id="productPrice" placeholder="Price">
 <button onclick="addProduct()">Add Product</button>
-</div>
 
-<!-- CUSTOMER PANEL -->
-<div id="customerPanel" class="card hidden">
-<h3>Customer Panel</h3>
-<select id="shopSelect"></select>
+<h4>Your Products</h4>
 <div id="productList"></div>
-<h4>Total: ₹<span id="total">0</span></h4>
-<button onclick="placeOrder()">Place Order</button>
+<button onclick="logout()">Logout</button>
 </div>
 
-<!-- DELIVERY PANEL -->
-<div id="deliveryPanel" class="card hidden">
-<h3>Delivery Panel</h3>
-<div id="deliveryOrders"></div>
-</div>
-
-<!-- ADMIN PANEL -->
-<div id="adminPanel" class="card hidden">
+<!-- ADMIN DASHBOARD -->
+<div id="adminSection" class="hidden">
 <h3>Admin Dashboard</h3>
-<div id="adminStats"></div>
+<h4>All Orders</h4>
+<div id="orderList"></div>
+<h4>Total Commission Earned (5%)</h4>
+<div id="commission"></div>
+<button onclick="logout()">Logout</button>
 </div>
 
 </div>
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
 
 <script>
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID"
-};
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
 
 let currentUser=null;
 let cart=[];
-let total=0;
 
+// Load storage
+let users=JSON.parse(localStorage.getItem("users"))||[];
+let shops=JSON.parse(localStorage.getItem("shops"))||[];
+let products=JSON.parse(localStorage.getItem("products"))||[];
+let orders=JSON.parse(localStorage.getItem("orders"))||[];
+
+// Register
 function register(){
- auth.createUserWithEmailAndPassword(email.value,password.value)
- .then(()=> alert("Registered"));
+let mobile=document.getElementById("mobile").value;
+let password=document.getElementById("password").value;
+let role=document.getElementById("role").value;
+
+if(!mobile || !password){alert("Fill all fields");return;}
+
+users.push({mobile,password,role});
+localStorage.setItem("users",JSON.stringify(users));
+alert("Registered Successfully");
 }
 
+// Login
 function login(){
- auth.signInWithEmailAndPassword(email.value,password.value)
- .then(user=>{
-   currentUser=user.user;
-   document.getElementById("dashboard").classList.remove("hidden");
-   showRolePanel();
- });
+let mobile=document.getElementById("mobile").value;
+let password=document.getElementById("password").value;
+
+let user=users.find(u=>u.mobile===mobile && u.password===password);
+
+if(!user){alert("Invalid Login");return;}
+
+currentUser=user;
+document.getElementById("authSection").classList.add("hidden");
+
+if(user.role==="customer"){
+document.getElementById("customerSection").classList.remove("hidden");
+loadShops();
+}
+else if(user.role==="shop"){
+document.getElementById("shopSection").classList.remove("hidden");
+loadProducts();
+}
+else{
+document.getElementById("adminSection").classList.remove("hidden");
+loadOrders();
+}
 }
 
-function showRolePanel(){
- let r=role.value;
- document.getElementById("shopPanel").classList.add("hidden");
- document.getElementById("customerPanel").classList.add("hidden");
- document.getElementById("deliveryPanel").classList.add("hidden");
- document.getElementById("adminPanel").classList.add("hidden");
-
- if(r==="shop") document.getElementById("shopPanel").classList.remove("hidden");
- if(r==="customer"){ document.getElementById("customerPanel").classList.remove("hidden"); loadShops();}
- if(r==="delivery"){ document.getElementById("deliveryPanel").classList.remove("hidden"); loadOrders();}
- if(r==="admin"){ document.getElementById("adminPanel").classList.remove("hidden"); loadAdmin();}
+// Logout
+function logout(){
+location.reload();
 }
 
-function createShop(){
- db.collection("shops").add({
-   name:shopName.value,
-   owner:currentUser.uid
- });
- alert("Shop Created");
+// Save shop
+function saveShop(){
+let name=document.getElementById("shopName").value;
+shops.push({owner:currentUser.mobile,name});
+localStorage.setItem("shops",JSON.stringify(shops));
+alert("Shop Saved");
 }
 
+// Add product
 function addProduct(){
- db.collection("products").add({
-   shop:shopName.value,
-   name:pname.value,
-   price:parseInt(pprice.value)
- });
- alert("Product Added");
+let name=document.getElementById("productName").value;
+let price=document.getElementById("productPrice").value;
+
+products.push({owner:currentUser.mobile,name,price});
+localStorage.setItem("products",JSON.stringify(products));
+loadProducts();
 }
 
-function loadShops(){
- db.collection("shops").onSnapshot(snapshot=>{
-   shopSelect.innerHTML="";
-   snapshot.forEach(doc=>{
-     shopSelect.innerHTML+=`<option>${doc.data().name}</option>`;
-   });
-   loadProducts();
- });
-}
-
-shopSelect?.addEventListener("change",loadProducts);
-
+// Load products
 function loadProducts(){
- db.collection("products")
- .where("shop","==",shopSelect.value)
- .onSnapshot(snapshot=>{
-   productList.innerHTML="";
-   snapshot.forEach(doc=>{
-     let p=doc.data();
-     productList.innerHTML+=`
-     <div class="card">
-       ${p.name} - ₹${p.price}
-       <button onclick="addToCart('${p.name}',${p.price})">Add</button>
-     </div>`;
-   });
- });
+let list=document.getElementById("productList");
+list.innerHTML="";
+products.filter(p=>p.owner===currentUser.mobile)
+.forEach(p=>{
+list.innerHTML+=`<div class='card'>${p.name} - ₹${p.price}</div>`;
+});
 }
 
+// Load shops for customer
+function loadShops(){
+let list=document.getElementById("shopList");
+list.innerHTML="";
+shops.forEach(s=>{
+let shopProducts=products.filter(p=>p.owner===s.owner);
+let html=`<div class='card'><h4>${s.name}</h4>`;
+shopProducts.forEach(p=>{
+html+=`${p.name} - ₹${p.price} 
+<button onclick="addToCart('${p.name}',${p.price})">Add</button><br>`;
+});
+html+="</div>";
+list.innerHTML+=html;
+});
+}
+
+// Add to cart
 function addToCart(name,price){
- cart.push({name,price});
- total+=price;
- document.getElementById("total").innerText=total;
+cart.push({name,price});
+document.getElementById("cart").innerHTML+=
+`<div>${name} - ₹${price}</div>`;
 }
 
+// Place order
 function placeOrder(){
- let commission=total*0.05;
- db.collection("orders").add({
-   customer:currentUser.uid,
-   shop:shopSelect.value,
-   total:total,
-   commission:commission,
-   status:"Pending",
-   timestamp:Date.now()
- });
- alert("Order Placed");
- cart=[]; total=0;
- document.getElementById("total").innerText=0;
+if(cart.length===0){alert("Cart Empty");return;}
+
+let total=cart.reduce((sum,i)=>sum+parseInt(i.price),0);
+let commission=total*0.05;
+
+orders.push({
+customer:currentUser.mobile,
+items:cart,
+total,
+commission
+});
+
+localStorage.setItem("orders",JSON.stringify(orders));
+alert("Order Placed Successfully");
+cart=[];
+document.getElementById("cart").innerHTML="";
 }
 
+// Load orders for admin
 function loadOrders(){
- db.collection("orders")
- .where("status","==","Pending")
- .onSnapshot(snapshot=>{
-   deliveryOrders.innerHTML="";
-   snapshot.forEach(doc=>{
-     let o=doc.data();
-     deliveryOrders.innerHTML+=`
-     <div class="card">
-       ₹${o.total}
-       <button onclick="deliver('${doc.id}')">Mark Delivered</button>
-       <button onclick="trackLocation('${doc.id}')">Start GPS</button>
-     </div>`;
-   });
- });
+let list=document.getElementById("orderList");
+let totalCommission=0;
+list.innerHTML="";
+orders.forEach(o=>{
+list.innerHTML+=`<div class='card'>
+Customer: ${o.customer}<br>
+Total: ₹${o.total}<br>
+Commission: ₹${o.commission}
+</div>`;
+totalCommission+=o.commission;
+});
+document.getElementById("commission").innerHTML="₹"+totalCommission;
 }
 
-function deliver(id){
- db.collection("orders").doc(id).update({status:"Delivered"});
-}
-
-function trackLocation(orderId){
- navigator.geolocation.watchPosition(position=>{
-   db.collection("orders").doc(orderId).update({
-     deliveryLocation:{
-       lat:position.coords.latitude,
-       lng:position.coords.longitude
-     }
-   });
- });
- alert("GPS Tracking Started");
-}
-
-function loadAdmin(){
- db.collection("orders").onSnapshot(snapshot=>{
-   let revenue=0,commission=0;
-   snapshot.forEach(doc=>{
-     revenue+=doc.data().total;
-     commission+=doc.data().commission;
-   });
-   adminStats.innerHTML=`
-   Total Revenue: ₹${revenue}<br>
-   Commission Earned: ₹${commission}`;
- });
-}
 </script>
 
 </body>
-  </html>
+</html>
