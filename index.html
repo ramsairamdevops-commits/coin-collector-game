@@ -16,12 +16,14 @@ body{background:#f0f3f5;}
     z-index:3000;
 }
 #loginBox{
-    background:white;padding:30px;border-radius:15px;width:300px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.2);
+    background:white;padding:30px;border-radius:15px;width:320px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.2);
 }
 #loginBox h2{margin-bottom:20px;color:#0072ff;}
 #loginBox input, #loginBox select{width:100%;padding:10px;margin:10px 0;border-radius:8px;border:1px solid #ccc;}
 #loginBox button{width:100%;padding:12px;border:none;border-radius:20px;background:linear-gradient(90deg,#00c6ff,#0072ff);color:white;font-weight:600;cursor:pointer;}
 #loginBox button:hover{opacity:0.9;}
+#loginMessage{margin-top:10px;font-weight:600;}
+#rejectedForm{display:none;margin-top:10px;}
 
 /* HEADER */
 header{
@@ -70,6 +72,15 @@ input,textarea{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px
             <option value="admin">Admin</option>
         </select>
         <button onclick="login()">Login</button>
+        <p id="loginMessage"></p>
+
+        <!-- Rejected user phone collection -->
+        <div id="rejectedForm">
+            <p style="color:red;">Your login was rejected. Please provide your phone number so we can contact you:</p>
+            <input type="text" id="rejectedPhone" placeholder="Phone Number">
+            <button onclick="submitRejected()">Submit</button>
+            <p id="rejectedMessage"></p>
+        </div>
     </div>
 </div>
 
@@ -114,15 +125,19 @@ const users = [
     {username:"admin",password:"admin",type:"admin"}
 ];
 let currentUser = null;
+let rejectedUsers = [];
 
-// LOGIN FUNCTION WITH REJECTION
+// LOGIN FUNCTION WITH PHONE CAPTURE
 function login(){
     const u = document.getElementById("loginUser").value.trim();
     const p = document.getElementById("loginPass").value.trim();
     const t = document.getElementById("userType").value;
+    const msg = document.getElementById("loginMessage");
+    const rejForm = document.getElementById("rejectedForm");
 
     if(!u || !p){
-        alert("Please enter username and password!");
+        msg.style.color = "red";
+        msg.innerText = "Please enter username and password!";
         return;
     }
 
@@ -130,14 +145,39 @@ function login(){
 
     if(user){
         currentUser = user;
-        alert("Login successful as " + t + " ✅");
-        document.getElementById("loginModal").style.display="none";
-        initApp();
+        msg.style.color = "green";
+        msg.innerText = "Login successful as " + t + " ✅";
+        setTimeout(()=>{
+            document.getElementById("loginModal").style.display="none";
+            initApp();
+            msg.innerText = "";
+            rejForm.style.display="none";
+        },500);
     } else {
-        alert("❌ Login rejected! Invalid credentials or user type.");
+        msg.style.color = "red";
+        msg.innerText = "❌ Login Rejected! Invalid credentials or user type.";
         document.getElementById("loginUser").value="";
         document.getElementById("loginPass").value="";
+        rejForm.style.display = "block";
     }
+}
+
+// SUBMIT REJECTED PHONE
+function submitRejected(){
+    const phone = document.getElementById("rejectedPhone").value.trim();
+    const userInput = document.getElementById("loginUser").value.trim() || "Unknown";
+    const msg = document.getElementById("rejectedMessage");
+
+    if(!phone){
+        msg.style.color = "red";
+        msg.innerText = "Please enter a valid phone number!";
+        return;
+    }
+
+    rejectedUsers.push({username: userInput, phone: phone, time: new Date().toLocaleString()});
+    msg.style.color = "green";
+    msg.innerText = "✅ Your number has been submitted. We will contact you.";
+    document.getElementById("rejectedPhone").value="";
 }
 
 // PRODUCTS
@@ -249,10 +289,8 @@ Total: ₹${cart.reduce((sum,i)=>sum+i.price,0)}
 
 // NOTIFICATION FUNCTION
 function notifyShopOwner(orderDetails){
-    // For demo: find all shop owners
     const shopOwners = users.filter(u => u.type==="shop");
     shopOwners.forEach(shop=>{
-        // Demo alert for shop owner
         alert(`🔔 ${shop.username} - New Order Received!\n\n${orderDetails}`);
     });
 }
