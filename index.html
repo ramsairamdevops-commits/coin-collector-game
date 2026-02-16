@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kirana Kootu - Premium</title>
+<title>Kirana Kootu - Enterprise Demo</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
 body{background:#f0f3f5;}
-/* Login Modal */
+
+/* LOGIN MODAL */
 #loginModal{
     position:fixed;top:0;left:0;width:100%;height:100%;
     background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;
@@ -106,29 +107,36 @@ input,textarea{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px
 </div>
 
 <script>
-// DEMO USERS (local demo)
+// DEMO USERS
 const users = [
     {username:"customer1",password:"1234",type:"customer"},
     {username:"shop1",password:"1234",type:"shop"},
     {username:"admin",password:"admin",type:"admin"}
 ];
-
 let currentUser = null;
 
-// LOGIN FUNCTION
+// LOGIN FUNCTION WITH REJECTION
 function login(){
-    const u = document.getElementById("loginUser").value;
-    const p = document.getElementById("loginPass").value;
+    const u = document.getElementById("loginUser").value.trim();
+    const p = document.getElementById("loginPass").value.trim();
     const t = document.getElementById("userType").value;
 
+    if(!u || !p){
+        alert("Please enter username and password!");
+        return;
+    }
+
     const user = users.find(x=>x.username===u && x.password===p && x.type===t);
+
     if(user){
         currentUser = user;
-        alert("Login successful as " + t);
+        alert("Login successful as " + t + " ✅");
         document.getElementById("loginModal").style.display="none";
         initApp();
-    } else{
-        alert("Invalid credentials!");
+    } else {
+        alert("❌ Login rejected! Invalid credentials or user type.");
+        document.getElementById("loginUser").value="";
+        document.getElementById("loginPass").value="";
     }
 }
 
@@ -189,9 +197,12 @@ function displayCart(){
     document.getElementById("totalPrice").innerText = total;
 }
 
-// PLACE ORDER
+// PLACE ORDER WITH SHOP OWNER NOTIFICATION
 function placeOrder(){
-    if(currentUser.type!=="customer"){ alert("Only customers can place orders"); return; }
+    if(currentUser.type!=="customer"){ 
+        alert("Only customers can place orders"); 
+        return; 
+    }
 
     const fullName = document.getElementById("fullName").value;
     const mobile = document.getElementById("mobile").value;
@@ -210,6 +221,9 @@ Name: ${fullName}
 Mobile: ${mobile}
 Address: ${house}, ${city}, ${state} - ${pincode}
 Payment: ${payment.value}
+Items:
+${cart.map(i=>i.name + " ₹" + i.price).join("\n")}
+Total: ₹${cart.reduce((sum,i)=>sum+i.price,0)}
     `;
 
     if(payment.value==="ONLINE"){
@@ -217,6 +231,9 @@ Payment: ${payment.value}
     }
 
     alert("Order placed successfully 🎉\n\n" + fullAddress);
+
+    // Notify Shop Owner
+    notifyShopOwner(fullAddress);
 
     // Reset
     cart=[];
@@ -228,6 +245,16 @@ Payment: ${payment.value}
     document.getElementById("state").value="";
     document.getElementById("pincode").value="";
     closeCart();
+}
+
+// NOTIFICATION FUNCTION
+function notifyShopOwner(orderDetails){
+    // For demo: find all shop owners
+    const shopOwners = users.filter(u => u.type==="shop");
+    shopOwners.forEach(shop=>{
+        // Demo alert for shop owner
+        alert(`🔔 ${shop.username} - New Order Received!\n\n${orderDetails}`);
+    });
 }
 
 // SHOP OWNER EDIT PRODUCT (Demo)
