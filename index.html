@@ -2,61 +2,230 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Premium Shop</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kirana Kootu Enterprise</title>
 
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_KEY"></script>
-
-<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
 <style>
-body{margin:0;font-family:sans-serif;}
-header{display:flex;justify-content:space-between;padding:15px;background:#ff5722;color:white;}
-.products{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:15px;}
-.card{background:white;padding:10px;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,0.1);}
-.cart-panel{position:fixed;bottom:-100%;left:0;width:100%;height:60%;background:white;transition:0.4s;padding:20px;}
-.cart-panel.active{bottom:0;}
-.login-page{height:100vh;display:flex;justify-content:center;align-items:center;background:linear-gradient(135deg,#ff512f,#dd2476);}
-.login-card{background:rgba(255,255,255,0.1);padding:30px;border-radius:20px;color:white;text-align:center;}
-.login-card input{width:100%;padding:10px;margin:10px 0;border:none;border-radius:8px;}
-button{padding:8px 12px;background:#ff5722;color:white;border:none;border-radius:6px;}
-#map{height:250px;margin-top:10px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  font-family:'Poppins',sans-serif;
+  background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+  color:white;
+}
+
+/* HEADER */
+.header{
+  padding:20px 30px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(20px);
+}
+.logo{
+  font-size:22px;
+  font-weight:700;
+  letter-spacing:1px;
+}
+.profile{
+  background:#00c6ff;
+  padding:8px 15px;
+  border-radius:20px;
+  font-size:14px;
+}
+
+/* HERO */
+.hero{
+  padding:50px 30px;
+}
+.hero h1{
+  font-size:32px;
+  font-weight:700;
+}
+.hero p{
+  margin-top:10px;
+  opacity:0.8;
+}
+
+/* PRODUCT GRID */
+.products{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:20px;
+  padding:20px 30px 100px;
+}
+
+.card{
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(20px);
+  padding:20px;
+  border-radius:20px;
+  transition:0.3s;
+}
+.card:hover{
+  transform:translateY(-8px);
+  box-shadow:0 15px 25px rgba(0,0,0,0.3);
+}
+.card h3{
+  font-size:16px;
+  margin-bottom:5px;
+}
+.price{
+  font-weight:600;
+  margin-bottom:10px;
+}
+button{
+  width:100%;
+  padding:8px;
+  border:none;
+  border-radius:10px;
+  background:linear-gradient(135deg,#00c6ff,#0072ff);
+  color:white;
+  cursor:pointer;
+}
+
+/* CART PANEL */
+.cart-panel{
+  position:fixed;
+  right:0;
+  top:0;
+  width:320px;
+  height:100vh;
+  background:rgba(0,0,0,0.9);
+  padding:20px;
+  overflow:auto;
+  transform:translateX(100%);
+  transition:0.4s;
+}
+.cart-panel.active{
+  transform:translateX(0);
+}
+.cart-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+.close{
+  cursor:pointer;
+  font-size:18px;
+}
+.cart-item{
+  margin-bottom:10px;
+}
+.total{
+  margin-top:20px;
+  font-weight:600;
+  font-size:18px;
+}
+.checkout{
+  margin-top:15px;
+  padding:10px;
+  width:100%;
+  border:none;
+  border-radius:10px;
+  background:#00c853;
+  color:white;
+}
+
+/* FLOATING CART BUTTON */
+.cart-btn{
+  position:fixed;
+  bottom:25px;
+  right:25px;
+  background:#ff4081;
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-size:22px;
+  cursor:pointer;
+  box-shadow:0 8px 20px rgba(0,0,0,0.4);
+}
+
 </style>
 </head>
 
 <body>
 
-<div id="loginPage" class="login-page">
-  <div class="login-card">
-    <h2>Premium Login</h2>
-    <input id="phone" placeholder="+91XXXXXXXXXX">
-    <button onclick="sendOTP()">Send OTP</button>
-    <input id="otp" placeholder="Enter OTP">
-    <button onclick="verifyOTP()">Login</button>
-    <div id="recaptcha"></div>
-  </div>
+<div class="header">
+  <div class="logo">🛒 KIRANA KOOTU</div>
+  <div class="profile">Enterprise</div>
 </div>
 
-<div id="app" style="display:none;">
-<header>
-  <h2>My Shop</h2>
-  <div>
-    🛒 <span id="cartCount">0</span>
-    <button onclick="toggleCart()">Cart</button>
-  </div>
-</header>
+<div class="hero">
+  <h1>Smart Grocery Commerce Platform</h1>
+  <p>AI Powered • Hyper Delivery • Enterprise Grade</p>
+</div>
 
 <div class="products" id="products"></div>
-<div id="map"></div>
 
 <div class="cart-panel" id="cartPanel">
-  <h3>Your Cart</h3>
+  <div class="cart-header">
+    <h3>Your Cart</h3>
+    <div class="close" onclick="toggleCart()">✕</div>
+  </div>
   <div id="cartItems"></div>
-  <button onclick="payNow()">Checkout</button>
-</div>
+  <div class="total">Total: ₹<span id="total">0</span></div>
+  <button class="checkout">Proceed to Checkout</button>
 </div>
 
-<script type="module" src="app.js"></script>
+<div class="cart-btn" onclick="toggleCart()">🛍</div>
+
+<script>
+
+let products=[
+{name:"Premium Rice 1kg",price:80},
+{name:"Organic Oil 1L",price:180},
+{name:"Brown Sugar 1kg",price:70},
+{name:"Farm Fresh Milk",price:35},
+{name:"Dry Fruits Mix",price:250},
+{name:"Premium Atta",price:55}
+];
+
+let cart=[];
+let total=0;
+
+function loadProducts(){
+let html="";
+products.forEach((p,index)=>{
+html+=`
+<div class="card">
+<h3>${p.name}</h3>
+<div class="price">₹${p.price}</div>
+<button onclick="addToCart(${index})">Add to Cart</button>
+</div>
+`;
+});
+document.getElementById("products").innerHTML=html;
+}
+
+function addToCart(index){
+cart.push(products[index]);
+total+=products[index].price;
+updateCart();
+}
+
+function updateCart(){
+let html="";
+cart.forEach(item=>{
+html+=`<div class="cart-item">${item.name} - ₹${item.price}</div>`;
+});
+document.getElementById("cartItems").innerHTML=html;
+document.getElementById("total").innerText=total;
+}
+
+function toggleCart(){
+document.getElementById("cartPanel").classList.toggle("active");
+}
+
+loadProducts();
+
+</script>
+
 </body>
 </html>
