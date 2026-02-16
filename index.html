@@ -1,230 +1,139 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kirana Kootu Enterprise</title>
+<title>Kirana Kootu</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
+
 body{
-  font-family:'Poppins',sans-serif;
-  background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
-  color:white;
+    background:#f4f6f9;
 }
 
-/* HEADER */
-.header{
-  padding:20px 30px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background:rgba(255,255,255,0.05);
-  backdrop-filter:blur(20px);
-}
-.logo{
-  font-size:22px;
-  font-weight:700;
-  letter-spacing:1px;
-}
-.profile{
-  background:#00c6ff;
-  padding:8px 15px;
-  border-radius:20px;
-  font-size:14px;
+/* Header */
+header{
+    background:linear-gradient(to right,#1f4037,#99f2c8);
+    padding:20px;
+    color:white;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
 }
 
-/* HERO */
-.hero{
-  padding:50px 30px;
-}
-.hero h1{
-  font-size:32px;
-  font-weight:700;
-}
-.hero p{
-  margin-top:10px;
-  opacity:0.8;
+header h1{
+    font-size:22px;
 }
 
-/* PRODUCT GRID */
-.products{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-  gap:20px;
-  padding:20px 30px 100px;
+.cart-btn{
+    background:white;
+    color:#1f4037;
+    padding:8px 15px;
+    border-radius:20px;
+    cursor:pointer;
+    font-weight:600;
+}
+
+/* Products */
+.container{
+    padding:20px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+    gap:20px;
 }
 
 .card{
-  background:rgba(255,255,255,0.08);
-  backdrop-filter:blur(20px);
-  padding:20px;
-  border-radius:20px;
-  transition:0.3s;
+    background:white;
+    padding:15px;
+    border-radius:12px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.08);
+    text-align:center;
+    transition:0.3s;
 }
+
 .card:hover{
-  transform:translateY(-8px);
-  box-shadow:0 15px 25px rgba(0,0,0,0.3);
+    transform:translateY(-5px);
 }
+
+.card img{
+    width:100px;
+    height:100px;
+    object-fit:cover;
+}
+
 .card h3{
-  font-size:16px;
-  margin-bottom:5px;
+    font-size:16px;
+    margin:10px 0;
 }
+
 .price{
-  font-weight:600;
-  margin-bottom:10px;
+    font-weight:600;
+    margin-bottom:10px;
 }
+
 button{
-  width:100%;
-  padding:8px;
-  border:none;
-  border-radius:10px;
-  background:linear-gradient(135deg,#00c6ff,#0072ff);
-  color:white;
-  cursor:pointer;
+    padding:8px 12px;
+    border:none;
+    border-radius:8px;
+    background:#28a745;
+    color:white;
+    cursor:pointer;
 }
-
-/* CART PANEL */
-.cart-panel{
-  position:fixed;
-  right:0;
-  top:0;
-  width:320px;
-  height:100vh;
-  background:rgba(0,0,0,0.9);
-  padding:20px;
-  overflow:auto;
-  transform:translateX(100%);
-  transition:0.4s;
-}
-.cart-panel.active{
-  transform:translateX(0);
-}
-.cart-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:20px;
-}
-.close{
-  cursor:pointer;
-  font-size:18px;
-}
-.cart-item{
-  margin-bottom:10px;
-}
-.total{
-  margin-top:20px;
-  font-weight:600;
-  font-size:18px;
-}
-.checkout{
-  margin-top:15px;
-  padding:10px;
-  width:100%;
-  border:none;
-  border-radius:10px;
-  background:#00c853;
-  color:white;
-}
-
-/* FLOATING CART BUTTON */
-.cart-btn{
-  position:fixed;
-  bottom:25px;
-  right:25px;
-  background:#ff4081;
-  width:60px;
-  height:60px;
-  border-radius:50%;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:22px;
-  cursor:pointer;
-  box-shadow:0 8px 20px rgba(0,0,0,0.4);
-}
-
 </style>
 </head>
 
 <body>
 
-<div class="header">
-  <div class="logo">🛒 KIRANA KOOTU</div>
-  <div class="profile">Enterprise</div>
+<header>
+    <h1>KIRANA KOOTU</h1>
+    <div class="cart-btn" onclick="viewCart()">🛒 Cart (<span id="cart-count">0</span>)</div>
+</header>
+
+<div class="container" id="product-list">
 </div>
-
-<div class="hero">
-  <h1>Smart Grocery Commerce Platform</h1>
-  <p>AI Powered • Hyper Delivery • Enterprise Grade</p>
-</div>
-
-<div class="products" id="products"></div>
-
-<div class="cart-panel" id="cartPanel">
-  <div class="cart-header">
-    <h3>Your Cart</h3>
-    <div class="close" onclick="toggleCart()">✕</div>
-  </div>
-  <div id="cartItems"></div>
-  <div class="total">Total: ₹<span id="total">0</span></div>
-  <button class="checkout">Proceed to Checkout</button>
-</div>
-
-<div class="cart-btn" onclick="toggleCart()">🛍</div>
 
 <script>
-
-let products=[
-{name:"Premium Rice 1kg",price:80},
-{name:"Organic Oil 1L",price:180},
-{name:"Brown Sugar 1kg",price:70},
-{name:"Farm Fresh Milk",price:35},
-{name:"Dry Fruits Mix",price:250},
-{name:"Premium Atta",price:55}
+const products = [
+    {id:1,name:"Rice 1kg",price:50,image:"https://via.placeholder.com/100"},
+    {id:2,name:"Sugar 1kg",price:40,image:"https://via.placeholder.com/100"},
+    {id:3,name:"Oil 1L",price:120,image:"https://via.placeholder.com/100"},
+    {id:4,name:"Milk 500ml",price:25,image:"https://via.placeholder.com/100"}
 ];
 
-let cart=[];
-let total=0;
+let cart = [];
 
-function loadProducts(){
-let html="";
-products.forEach((p,index)=>{
-html+=`
-<div class="card">
-<h3>${p.name}</h3>
-<div class="price">₹${p.price}</div>
-<button onclick="addToCart(${index})">Add to Cart</button>
-</div>
-`;
-});
-document.getElementById("products").innerHTML=html;
+function displayProducts(){
+    const container = document.getElementById("product-list");
+    products.forEach(p=>{
+        container.innerHTML += `
+            <div class="card">
+                <img src="${p.image}">
+                <h3>${p.name}</h3>
+                <div class="price">₹${p.price}</div>
+                <button onclick="addToCart(${p.id})">Add to Cart</button>
+            </div>
+        `;
+    });
 }
 
-function addToCart(index){
-cart.push(products[index]);
-total+=products[index].price;
-updateCart();
+function addToCart(id){
+    cart.push(id);
+    document.getElementById("cart-count").innerText = cart.length;
 }
 
-function updateCart(){
-let html="";
-cart.forEach(item=>{
-html+=`<div class="cart-item">${item.name} - ₹${item.price}</div>`;
-});
-document.getElementById("cartItems").innerHTML=html;
-document.getElementById("total").innerText=total;
+function viewCart(){
+    alert("Items in cart: " + cart.length);
 }
 
-function toggleCart(){
-document.getElementById("cartPanel").classList.toggle("active");
-}
-
-loadProducts();
-
+displayProducts();
 </script>
 
 </body>
