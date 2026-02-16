@@ -4,24 +4,25 @@
 <meta charset="UTF-8">
 <title>Kirana Startup App</title>
 <style>
-body{font-family:Arial;background:#f4f4f4;margin:0;padding:0}
-header{background:#2e7d32;color:white;padding:15px;text-align:center}
+body{font-family:Arial;margin:0;background:#f2f2f2}
+header{background:#1b5e20;color:white;padding:15px;text-align:center}
 .container{padding:20px}
-input,select{padding:8px;margin:5px;width:95%}
-button{padding:10px;background:#2e7d32;color:white;border:none;cursor:pointer}
-.card{background:white;padding:15px;margin:10px 0;border-radius:8px}
+input,select{padding:10px;margin:5px 0;width:100%;box-sizing:border-box}
+button{padding:10px;margin:5px 0;background:#1b5e20;color:white;border:none;cursor:pointer;width:100%}
+.card{background:white;padding:10px;margin:10px 0;border-radius:6px}
 .hidden{display:none}
+h3{margin-top:0}
 </style>
 </head>
 <body>
 
 <header>
-<h2>Kirana Local Shop App</h2>
+<h2>Kirana Local Shop Startup</h2>
 </header>
 
 <div class="container">
 
-<!-- LOGIN / REGISTER -->
+<!-- AUTH SECTION -->
 <div id="authSection">
 <h3>Login / Register</h3>
 <input type="text" id="mobile" placeholder="Mobile Number">
@@ -31,8 +32,8 @@ button{padding:10px;background:#2e7d32;color:white;border:none;cursor:pointer}
 <option value="shop">Shop Owner</option>
 <option value="admin">Admin</option>
 </select>
-<button onclick="register()">Register</button>
-<button onclick="login()">Login</button>
+<button onclick="registerUser()">Register</button>
+<button onclick="loginUser()">Login</button>
 </div>
 
 <!-- CUSTOMER DASHBOARD -->
@@ -45,10 +46,10 @@ button{padding:10px;background:#2e7d32;color:white;border:none;cursor:pointer}
 <button onclick="logout()">Logout</button>
 </div>
 
-<!-- SHOP OWNER DASHBOARD -->
+<!-- SHOP DASHBOARD -->
 <div id="shopSection" class="hidden">
 <h3>Shop Owner Dashboard</h3>
-<input type="text" id="shopName" placeholder="Shop Name">
+<input type="text" id="shopName" placeholder="Enter Shop Name">
 <button onclick="saveShop()">Save Shop</button>
 
 <h4>Add Product</h4>
@@ -64,10 +65,9 @@ button{padding:10px;background:#2e7d32;color:white;border:none;cursor:pointer}
 <!-- ADMIN DASHBOARD -->
 <div id="adminSection" class="hidden">
 <h3>Admin Dashboard</h3>
-<h4>All Orders</h4>
 <div id="orderList"></div>
-<h4>Total Commission Earned (5%)</h4>
-<div id="commission"></div>
+<h4>Total Commission (5%)</h4>
+<div id="commissionTotal"></div>
 <button onclick="logout()">Logout</button>
 </div>
 
@@ -75,45 +75,63 @@ button{padding:10px;background:#2e7d32;color:white;border:none;cursor:pointer}
 
 <script>
 
-let currentUser=null;
-let cart=[];
+// ===== INITIAL DATA LOAD =====
+let users = JSON.parse(localStorage.getItem("users")) || [];
+let shops = JSON.parse(localStorage.getItem("shops")) || [];
+let products = JSON.parse(localStorage.getItem("products")) || [];
+let orders = JSON.parse(localStorage.getItem("orders")) || [];
+let currentUser = null;
+let cart = [];
 
-// Load storage
-let users=JSON.parse(localStorage.getItem("users"))||[];
-let shops=JSON.parse(localStorage.getItem("shops"))||[];
-let products=JSON.parse(localStorage.getItem("products"))||[];
-let orders=JSON.parse(localStorage.getItem("orders"))||[];
-
-// Register
-function register(){
-let mobile=document.getElementById("mobile").value;
-let password=document.getElementById("password").value;
-let role=document.getElementById("role").value;
-
-if(!mobile || !password){alert("Fill all fields");return;}
-
-users.push({mobile,password,role});
-localStorage.setItem("users",JSON.stringify(users));
-alert("Registered Successfully");
+// Create default admin if not exists
+if(!users.find(u => u.role === "admin")){
+users.push({mobile:"9999", password:"admin", role:"admin"});
+localStorage.setItem("users", JSON.stringify(users));
 }
 
-// Login
-function login(){
-let mobile=document.getElementById("mobile").value;
-let password=document.getElementById("password").value;
+// ===== REGISTER =====
+function registerUser(){
+let mobile = document.getElementById("mobile").value.trim();
+let password = document.getElementById("password").value.trim();
+let role = document.getElementById("role").value;
 
-let user=users.find(u=>u.mobile===mobile && u.password===password);
+if(mobile==="" || password===""){
+alert("Please fill all fields");
+return;
+}
 
-if(!user){alert("Invalid Login");return;}
+if(users.find(u => u.mobile === mobile)){
+alert("User already exists");
+return;
+}
 
-currentUser=user;
+users.push({mobile,password,role});
+localStorage.setItem("users", JSON.stringify(users));
+
+alert("Registration Successful! Now Login.");
+}
+
+// ===== LOGIN =====
+function loginUser(){
+let mobile = document.getElementById("mobile").value.trim();
+let password = document.getElementById("password").value.trim();
+
+let user = users.find(u => u.mobile === mobile && u.password === password);
+
+if(!user){
+alert("Invalid mobile or password");
+return;
+}
+
+currentUser = user;
+
 document.getElementById("authSection").classList.add("hidden");
 
-if(user.role==="customer"){
+if(user.role === "customer"){
 document.getElementById("customerSection").classList.remove("hidden");
 loadShops();
 }
-else if(user.role==="shop"){
+else if(user.role === "shop"){
 document.getElementById("shopSection").classList.remove("hidden");
 loadProducts();
 }
@@ -123,68 +141,75 @@ loadOrders();
 }
 }
 
-// Logout
+// ===== LOGOUT =====
 function logout(){
 location.reload();
 }
 
-// Save shop
+// ===== SHOP FUNCTIONS =====
 function saveShop(){
-let name=document.getElementById("shopName").value;
+let name = document.getElementById("shopName").value.trim();
+if(name===""){alert("Enter shop name");return;}
+
 shops.push({owner:currentUser.mobile,name});
-localStorage.setItem("shops",JSON.stringify(shops));
+localStorage.setItem("shops", JSON.stringify(shops));
 alert("Shop Saved");
 }
 
-// Add product
 function addProduct(){
-let name=document.getElementById("productName").value;
-let price=document.getElementById("productPrice").value;
+let name = document.getElementById("productName").value.trim();
+let price = document.getElementById("productPrice").value;
+
+if(name==="" || price===""){alert("Fill product details");return;}
 
 products.push({owner:currentUser.mobile,name,price});
-localStorage.setItem("products",JSON.stringify(products));
+localStorage.setItem("products", JSON.stringify(products));
 loadProducts();
 }
 
-// Load products
 function loadProducts(){
-let list=document.getElementById("productList");
+let list = document.getElementById("productList");
 list.innerHTML="";
-products.filter(p=>p.owner===currentUser.mobile)
+products.filter(p => p.owner === currentUser.mobile)
 .forEach(p=>{
-list.innerHTML+=`<div class='card'>${p.name} - ₹${p.price}</div>`;
+list.innerHTML += `<div class="card">${p.name} - ₹${p.price}</div>`;
 });
 }
 
-// Load shops for customer
+// ===== CUSTOMER FUNCTIONS =====
 function loadShops(){
-let list=document.getElementById("shopList");
+let list = document.getElementById("shopList");
 list.innerHTML="";
+
 shops.forEach(s=>{
-let shopProducts=products.filter(p=>p.owner===s.owner);
-let html=`<div class='card'><h4>${s.name}</h4>`;
+let shopProducts = products.filter(p=>p.owner===s.owner);
+
+let html = `<div class="card"><h4>${s.name}</h4>`;
+
 shopProducts.forEach(p=>{
-html+=`${p.name} - ₹${p.price} 
+html += `${p.name} - ₹${p.price}
 <button onclick="addToCart('${p.name}',${p.price})">Add</button><br>`;
 });
-html+="</div>";
-list.innerHTML+=html;
+
+html += "</div>";
+list.innerHTML += html;
 });
 }
 
-// Add to cart
 function addToCart(name,price){
 cart.push({name,price});
-document.getElementById("cart").innerHTML+=
+document.getElementById("cart").innerHTML += 
 `<div>${name} - ₹${price}</div>`;
 }
 
-// Place order
 function placeOrder(){
-if(cart.length===0){alert("Cart Empty");return;}
+if(cart.length===0){
+alert("Cart is empty");
+return;
+}
 
-let total=cart.reduce((sum,i)=>sum+parseInt(i.price),0);
-let commission=total*0.05;
+let total = cart.reduce((sum,item)=>sum+parseInt(item.price),0);
+let commission = total * 0.05;
 
 orders.push({
 customer:currentUser.mobile,
@@ -193,26 +218,30 @@ total,
 commission
 });
 
-localStorage.setItem("orders",JSON.stringify(orders));
-alert("Order Placed Successfully");
+localStorage.setItem("orders", JSON.stringify(orders));
+
+alert("Order placed successfully!");
 cart=[];
 document.getElementById("cart").innerHTML="";
 }
 
-// Load orders for admin
+// ===== ADMIN FUNCTIONS =====
 function loadOrders(){
-let list=document.getElementById("orderList");
-let totalCommission=0;
+let list = document.getElementById("orderList");
+let totalCommission = 0;
 list.innerHTML="";
+
 orders.forEach(o=>{
-list.innerHTML+=`<div class='card'>
+list.innerHTML += `
+<div class="card">
 Customer: ${o.customer}<br>
 Total: ₹${o.total}<br>
 Commission: ₹${o.commission}
 </div>`;
-totalCommission+=o.commission;
+totalCommission += o.commission;
 });
-document.getElementById("commission").innerHTML="₹"+totalCommission;
+
+document.getElementById("commissionTotal").innerHTML = "₹" + totalCommission;
 }
 
 </script>
