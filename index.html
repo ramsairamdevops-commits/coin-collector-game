@@ -2,264 +2,61 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Kirana Super App</title>
+<title>Premium Shop</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_KEY"></script>
+
+<link rel="stylesheet" href="style.css">
+
 <style>
-body{
-font-family:Arial;
-margin:0;
-background:#f2f2f2;
-}
-header{
-background:#1b5e20;
-color:white;
-padding:15px;
-text-align:center;
-}
-.container{
-padding:15px;
-}
-input,button{
-padding:8px;
-margin:5px 0;
-width:100%;
-box-sizing:border-box;
-}
-button{
-background:#1b5e20;
-color:white;
-border:none;
-cursor:pointer;
-}
-.card{
-background:white;
-padding:10px;
-margin:10px 0;
-border-radius:8px;
-box-shadow:0 4px 10px rgba(0,0,0,0.1);
-}
-img{
-width:100%;
-height:150px;
-object-fit:cover;
-border-radius:6px;
-}
-.flex{
-display:flex;
-gap:10px;
-}
-.hidden{display:none;}
-.qty-btn{
-width:30px;
-}
+body{margin:0;font-family:sans-serif;}
+header{display:flex;justify-content:space-between;padding:15px;background:#ff5722;color:white;}
+.products{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:15px;}
+.card{background:white;padding:10px;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,0.1);}
+.cart-panel{position:fixed;bottom:-100%;left:0;width:100%;height:60%;background:white;transition:0.4s;padding:20px;}
+.cart-panel.active{bottom:0;}
+.login-page{height:100vh;display:flex;justify-content:center;align-items:center;background:linear-gradient(135deg,#ff512f,#dd2476);}
+.login-card{background:rgba(255,255,255,0.1);padding:30px;border-radius:20px;color:white;text-align:center;}
+.login-card input{width:100%;padding:10px;margin:10px 0;border:none;border-radius:8px;}
+button{padding:8px 12px;background:#ff5722;color:white;border:none;border-radius:6px;}
+#map{height:250px;margin-top:10px;}
 </style>
 </head>
+
 <body>
 
+<div id="loginPage" class="login-page">
+  <div class="login-card">
+    <h2>Premium Login</h2>
+    <input id="phone" placeholder="+91XXXXXXXXXX">
+    <button onclick="sendOTP()">Send OTP</button>
+    <input id="otp" placeholder="Enter OTP">
+    <button onclick="verifyOTP()">Login</button>
+    <div id="recaptcha"></div>
+  </div>
+</div>
+
+<div id="app" style="display:none;">
 <header>
-<h2>Kirana Super App</h2>
+  <h2>My Shop</h2>
+  <div>
+    🛒 <span id="cartCount">0</span>
+    <button onclick="toggleCart()">Cart</button>
+  </div>
 </header>
 
-<div class="container">
+<div class="products" id="products"></div>
+<div id="map"></div>
 
-<!-- LOGIN -->
-<div id="loginSection">
-<h3>Shop Owner Login</h3>
-<input type="password" id="shopPass" placeholder="Enter Shop Password">
-<button onclick="login()">Login</button>
+<div class="cart-panel" id="cartPanel">
+  <h3>Your Cart</h3>
+  <div id="cartItems"></div>
+  <button onclick="payNow()">Checkout</button>
+</div>
 </div>
 
-<!-- SHOP DASHBOARD -->
-<div id="shopSection" class="hidden">
-<h3>Add / Update Product</h3>
-
-<input type="text" id="productName" placeholder="Product Name">
-<input type="number" id="productPrice" placeholder="Price">
-<input type="file" id="productImage">
-
-<img id="preview" class="hidden">
-
-<button onclick="saveProduct()">Save Product</button>
-<hr>
-<h3>Your Products</h3>
-<div id="shopProducts"></div>
-<button onclick="logout()">Logout</button>
-</div>
-
-<hr>
-
-<!-- CUSTOMER VIEW -->
-<h3>Customer View</h3>
-<div id="customerProducts"></div>
-
-<h3>Cart</h3>
-<div id="cart"></div>
-<h4 id="totalAmount"></h4>
-
-</div>
-
-<script>
-
-let products = JSON.parse(localStorage.getItem("products")) || [];
-let cart = [];
-let editIndex = -1;
-
-// LOGIN (simple password demo)
-function login(){
-let pass = document.getElementById("shopPass").value;
-if(pass==="1234"){
-document.getElementById("loginSection").classList.add("hidden");
-document.getElementById("shopSection").classList.remove("hidden");
-loadShopProducts();
-}
-else{
-alert("Wrong Password");
-}
-}
-
-function logout(){
-location.reload();
-}
-
-// IMAGE PREVIEW
-document.getElementById("productImage").addEventListener("change", function(){
-let file = this.files[0];
-let reader = new FileReader();
-reader.onload = function(e){
-let preview = document.getElementById("preview");
-preview.src = e.target.result;
-preview.classList.remove("hidden");
-}
-reader.readAsDataURL(file);
-});
-
-// SAVE PRODUCT
-function saveProduct(){
-let name = document.getElementById("productName").value;
-let price = document.getElementById("productPrice").value;
-let image = document.getElementById("preview").src;
-
-if(!name || !price || !image){
-alert("Fill all fields");
-return;
-}
-
-let product = {name,price,image};
-
-if(editIndex === -1){
-products.push(product);
-}else{
-products[editIndex] = product;
-editIndex = -1;
-}
-
-localStorage.setItem("products", JSON.stringify(products));
-
-clearForm();
-loadShopProducts();
-loadCustomerProducts();
-}
-
-function clearForm(){
-document.getElementById("productName").value="";
-document.getElementById("productPrice").value="";
-document.getElementById("preview").classList.add("hidden");
-}
-
-// SHOP VIEW
-function loadShopProducts(){
-let list = document.getElementById("shopProducts");
-list.innerHTML="";
-products.forEach((p,index)=>{
-list.innerHTML += `
-<div class="card">
-<img src="${p.image}">
-<h4>${p.name}</h4>
-<p>₹${p.price}</p>
-<button onclick="editProduct(${index})">Edit</button>
-<button onclick="deleteProduct(${index})">Delete</button>
-</div>`;
-});
-}
-
-function editProduct(index){
-let p = products[index];
-document.getElementById("productName").value = p.name;
-document.getElementById("productPrice").value = p.price;
-document.getElementById("preview").src = p.image;
-document.getElementById("preview").classList.remove("hidden");
-editIndex = index;
-}
-
-function deleteProduct(index){
-products.splice(index,1);
-localStorage.setItem("products", JSON.stringify(products));
-loadShopProducts();
-loadCustomerProducts();
-}
-
-// CUSTOMER VIEW
-function loadCustomerProducts(){
-let list = document.getElementById("customerProducts");
-list.innerHTML="";
-products.forEach((p,index)=>{
-list.innerHTML += `
-<div class="card">
-<img src="${p.image}">
-<h4>${p.name}</h4>
-<p>₹${p.price}</p>
-<button onclick="addToCart(${index})">Add to Cart</button>
-</div>`;
-});
-}
-
-function addToCart(index){
-let product = products[index];
-let existing = cart.find(c=>c.name===product.name);
-
-if(existing){
-existing.qty +=1;
-}else{
-cart.push({...product, qty:1});
-}
-renderCart();
-}
-
-function renderCart(){
-let list = document.getElementById("cart");
-let total = 0;
-list.innerHTML="";
-
-cart.forEach((c,i)=>{
-total += c.price * c.qty;
-list.innerHTML += `
-<div class="card">
-<img src="${c.image}">
-<h4>${c.name}</h4>
-<div class="flex">
-<button class="qty-btn" onclick="changeQty(${i},-1)">-</button>
-<span>${c.qty}</span>
-<button class="qty-btn" onclick="changeQty(${i},1)">+</button>
-</div>
-<p>₹${c.price * c.qty}</p>
-</div>`;
-});
-
-document.getElementById("totalAmount").innerText="Total: ₹"+total;
-}
-
-function changeQty(index,change){
-cart[index].qty += change;
-if(cart[index].qty<=0){
-cart.splice(index,1);
-}
-renderCart();
-}
-
-loadCustomerProducts();
-
-</script>
-
+<script type="module" src="app.js"></script>
 </body>
 </html>
