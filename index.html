@@ -3,23 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kirana Kootu</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<title>Kirana Kootu - Premium Shopping</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:'Poppins',sans-serif;
-}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+body{background:#f2f4f8;}
 
-body{
-    background:#f4f6f9;
-}
-
-/* Header */
 header{
     background:linear-gradient(to right,#1f4037,#99f2c8);
     padding:20px;
@@ -27,10 +17,6 @@ header{
     display:flex;
     justify-content:space-between;
     align-items:center;
-}
-
-header h1{
-    font-size:22px;
 }
 
 .cart-btn{
@@ -42,7 +28,6 @@ header h1{
     font-weight:600;
 }
 
-/* Products */
 .container{
     padding:20px;
     display:grid;
@@ -54,28 +39,14 @@ header h1{
     background:white;
     padding:15px;
     border-radius:12px;
-    box-shadow:0 4px 10px rgba(0,0,0,0.08);
     text-align:center;
-    transition:0.3s;
-}
-
-.card:hover{
-    transform:translateY(-5px);
+    box-shadow:0 4px 8px rgba(0,0,0,0.08);
 }
 
 .card img{
     width:100px;
     height:100px;
     object-fit:cover;
-}
-
-.card h3{
-    font-size:16px;
-    margin:10px 0;
-}
-
-.price{
-    font-weight:600;
     margin-bottom:10px;
 }
 
@@ -86,6 +57,36 @@ button{
     background:#28a745;
     color:white;
     cursor:pointer;
+    margin-top:8px;
+}
+
+#cartModal{
+    position:fixed;
+    top:0;
+    right:-100%;
+    width:350px;
+    height:100%;
+    background:white;
+    box-shadow:-4px 0 10px rgba(0,0,0,0.2);
+    padding:20px;
+    transition:0.4s;
+    overflow:auto;
+}
+
+#cartModal.active{
+    right:0;
+}
+
+input, textarea{
+    width:100%;
+    padding:8px;
+    margin:8px 0;
+    border-radius:6px;
+    border:1px solid #ccc;
+}
+
+.payment-option{
+    margin:10px 0;
 }
 </style>
 </head>
@@ -93,44 +94,136 @@ button{
 <body>
 
 <header>
-    <h1>KIRANA KOOTU</h1>
-    <div class="cart-btn" onclick="viewCart()">🛒 Cart (<span id="cart-count">0</span>)</div>
+    <h2>KIRANA KOOTU</h2>
+    <div class="cart-btn" onclick="openCart()">🛒 Cart (<span id="cart-count">0</span>)</div>
 </header>
 
-<div class="container" id="product-list">
+<div class="container" id="product-list"></div>
+
+<!-- CART PANEL -->
+<div id="cartModal">
+    <h3>Your Cart</h3>
+    <div id="cartItems"></div>
+    <h4>Total: ₹<span id="totalPrice">0</span></h4>
+
+    <h3>Delivery Address</h3>
+    <input type="text" id="fullName" placeholder="Full Name">
+    <input type="text" id="mobile" placeholder="Mobile Number">
+    <input type="text" id="house" placeholder="House / Street">
+    <input type="text" id="city" placeholder="City">
+    <input type="text" id="state" placeholder="State">
+    <input type="text" id="pincode" placeholder="Pincode">
+
+    <h3>Payment Mode</h3>
+    <div class="payment-option">
+        <input type="radio" name="payment" value="COD"> Cash on Delivery
+    </div>
+    <div class="payment-option">
+        <input type="radio" name="payment" value="ONLINE"> Online Payment
+    </div>
+
+    <button onclick="placeOrder()">Place Order</button>
+    <button onclick="closeCart()" style="background:#dc3545;">Close</button>
 </div>
 
 <script>
+// PRODUCTS
 const products = [
     {id:1,name:"Rice 1kg",price:50,image:"https://via.placeholder.com/100"},
     {id:2,name:"Sugar 1kg",price:40,image:"https://via.placeholder.com/100"},
     {id:3,name:"Oil 1L",price:120,image:"https://via.placeholder.com/100"},
-    {id:4,name:"Milk 500ml",price:25,image:"https://via.placeholder.com/100"}
+    {id:4,name:"Milk 500ml",price:25,image:"https://via.placeholder.com/100"},
+    {id:5,name:"Atta 1kg",price:60,image:"https://via.placeholder.com/100"},
+    {id:6,name:"Dry Fruits Mix",price:250,image:"https://via.placeholder.com/100"}
 ];
 
 let cart = [];
 
+// DISPLAY PRODUCTS
 function displayProducts(){
     const container = document.getElementById("product-list");
     products.forEach(p=>{
         container.innerHTML += `
             <div class="card">
-                <img src="${p.image}">
+                <img src="${p.image}" alt="${p.name}">
                 <h3>${p.name}</h3>
-                <div class="price">₹${p.price}</div>
+                <p>₹${p.price}</p>
                 <button onclick="addToCart(${p.id})">Add to Cart</button>
             </div>
         `;
     });
 }
 
+// ADD TO CART
 function addToCart(id){
-    cart.push(id);
+    const product = products.find(p=>p.id===id);
+    cart.push(product);
     document.getElementById("cart-count").innerText = cart.length;
+    alert(product.name + " added to cart");
 }
 
-function viewCart(){
-    alert("Items in cart: " + cart.length);
+// CART PANEL
+function openCart(){
+    document.getElementById("cartModal").classList.add("active");
+    displayCart();
+}
+
+function closeCart(){
+    document.getElementById("cartModal").classList.remove("active");
+}
+
+function displayCart(){
+    const cartItems = document.getElementById("cartItems");
+    let total = 0;
+    cartItems.innerHTML = "";
+
+    cart.forEach(item=>{
+        total += item.price;
+        cartItems.innerHTML += `<p>${item.name} - ₹${item.price}</p>`;
+    });
+
+    document.getElementById("totalPrice").innerText = total;
+}
+
+// PLACE ORDER
+function placeOrder(){
+    const fullName = document.getElementById("fullName").value;
+    const mobile = document.getElementById("mobile").value;
+    const house = document.getElementById("house").value;
+    const city = document.getElementById("city").value;
+    const state = document.getElementById("state").value;
+    const pincode = document.getElementById("pincode").value;
+
+    const payment = document.querySelector('input[name="payment"]:checked');
+
+    if(cart.length===0){ alert("Cart is empty"); return; }
+    if(!fullName || !mobile || !house || !city || !state || !pincode){ alert("Fill complete address"); return; }
+    if(!payment){ alert("Select payment mode"); return; }
+
+    let fullAddress = `
+Name: ${fullName}
+Mobile: ${mobile}
+Address: ${house}, ${city}, ${state} - ${pincode}
+Payment: ${payment.value}
+    `;
+
+    if(payment.value==="ONLINE"){
+        alert("Redirecting to Online Payment Gateway (Demo)...");
+        // connect Razorpay later
+    }
+
+    alert("Order placed successfully 🎉\n\n" + fullAddress);
+
+    // Reset
+    cart=[];
+    document.getElementById("cart-count").innerText=0;
+    document.getElementById("fullName").value="";
+    document.getElementById("mobile").value="";
+    document.getElementById("house").value="";
+    document.getElementById("city").value="";
+    document.getElementById("state").value="";
+    document.getElementById("pincode").value="";
+    closeCart();
 }
 
 displayProducts();
